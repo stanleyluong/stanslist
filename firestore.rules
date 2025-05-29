@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Rules for listings collection
+    match /listings/{listingId} {
+      // Allow read access to all listings for anyone
+      allow read: if true;
+      
+      // Allow authenticated users to create listings
+      // The document being created (request.resource.data) must have a userId matching the creator's auth.uid
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      
+      // Allow users to update their own listings
+      // The existing document (resource.data) must be owned by the user
+      // And the new data (request.resource.data) must also have the userId matching (cannot change owner)
+      allow update: if request.auth != null 
+                    && request.auth.uid == resource.data.userId   // Check ownership of existing doc
+                    && request.auth.uid == request.resource.data.userId; // Ensure userId is not changed
+      
+      // Allow users to delete their own listings
+      // The existing document (resource.data) must be owned by the user
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Rules for users collection (if needed in the future)
+    match /users/{userId} {
+      // Allow users to read and write their own data
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - flutter clean
+        - flutter pub get
+    build:
+      commands:
+        - flutter build web --release --dart-define=FLUTTER_WEB_USE_SKIA=true
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - $HOME/.pub-cache/**/*

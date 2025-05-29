@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Stan's List
+// Temporarily allowing unauthenticated access for testing
+// TODO: Implement proper authentication and secure these rules
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read access to all files (for displaying images)
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+    
+    // Allow write access to listings folder for image uploads
+    match /listings/{imageId} {
+      allow write: if true; // Temporary - will require auth later
+    }
+    
+    // Block writes to other folders
+    match /{otherPaths=**} {
+      allow write: if false;
+    }
+  }
+}
