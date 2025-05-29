@@ -38,3 +38,6 @@ coverage/
 
 # Log files
 *.log
+
+# Environment variables
+.env
