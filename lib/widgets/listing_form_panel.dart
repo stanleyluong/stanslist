@@ -361,14 +361,10 @@ class _ListingFormPanelState extends State<ListingFormPanel> {
 
     // Ensure the controller's text is a valid item, or use the first item as default if controller is empty/invalid
     String? currentValue = widget.controllers[fullControllerKey]?.text;
-    if (currentValue == null ||
-        currentValue.isEmpty ||
-        !items.contains(currentValue)) {
-      currentValue = items.isNotEmpty ? items.first : null;
+    if (currentValue == null || currentValue.isEmpty || !items.contains(currentValue)) {
       // Update controller if it was empty or invalid, so UI and data are in sync
-      if (widget.controllers[fullControllerKey] != null &&
-          currentValue != null) {
-        widget.controllers[fullControllerKey]!.text = currentValue;
+      if (widget.controllers[fullControllerKey] != null) {
+        widget.controllers[fullControllerKey]!.text = currentValue ?? '';
       }
     }
 

@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/auth_provider.dart'; // This is your custom AuthProvider
-
+import '../providers/auth_provider.dart';
 class StansListAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? titleText; // Add this line
 
@@ -25,18 +24,24 @@ class StansListAppBar extends StatelessWidget implements PreferredSizeWidget {
         '[StansListAppBar] Building. currentUser UID: ${currentUser?.uid ?? "null"}');
 
     return AppBar(
-      title: Text(titleText ?? 'Stan\'s List'), // Modify this line
+      title: InkWell( // Wrap the Text widget in an InkWell
+        onTap: () => context.go('/'), // Add onTap to navigate to homepage
+        child: Text(titleText ?? 'Stan\'s List'), // Modify this line
+      ),
       actions: [
         TextButton.icon(
           onPressed: () => context.go('/listings'),
           icon: const Icon(Icons.search),
           label: const Text('Browse'),
+          style: TextButton.styleFrom(foregroundColor: Colors.white), // Add this line
         ),
         TextButton.icon(
           onPressed: () {
             context.go('/create');
           },
           icon: const Icon(Icons.add),
+
+          style: TextButton.styleFrom(foregroundColor: Colors.white), // Add this line
           label: const Text('Post'),
         ),
         const SizedBox(width: 4), // Reduced width
@@ -54,11 +59,11 @@ class StansListAppBar extends StatelessWidget implements PreferredSizeWidget {
         ] else ...[
           TextButton.icon(
             onPressed: () {
-              // TODO: Implement navigation to My Posts screen
               context.go('/my-posts');
             },
             icon: const Icon(Icons.list_alt),
             label: const Text('My Posts'),
+            style: TextButton.styleFrom(foregroundColor: Colors.white), // Add this line
           ),
           TextButton(
             onPressed: () async {

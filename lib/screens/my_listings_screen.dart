@@ -103,7 +103,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                 width: double.infinity,
                 child: DataTable(
                   columnSpacing: 20,
-                  headingRowColor: MaterialStateColor.resolveWith((states) => Theme.of(context).colorScheme.primaryContainer),
+                  headingRowColor: WidgetStateColor.resolveWith((states) => Theme.of(context).colorScheme.primaryContainer),
                   headingTextStyle: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimaryContainer),
                   columns: const [
                     DataColumn(label: Text('Image')),
@@ -169,7 +169,6 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                               icon: const Icon(Icons.edit, size: 20),
                               tooltip: 'Edit',
                               onPressed: () {
-                                // TODO: Implement edit functionality
                                 context.go('/listing/${listing.id}/edit'); // Placeholder for edit route
                               },
                             ),
@@ -177,7 +176,6 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                               icon: const Icon(Icons.delete, size: 20, color: Colors.redAccent),
                               tooltip: 'Delete',
                               onPressed: () async {
-                                // TODO: Implement delete functionality with confirmation
                                 final confirm = await showDialog<bool>(
                                   context: context,
                                   builder: (BuildContext context) {

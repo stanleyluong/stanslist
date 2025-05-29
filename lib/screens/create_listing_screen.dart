@@ -620,11 +620,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((255 * 0.3).round()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+            color: Theme.of(context).colorScheme.outline.withAlpha((255 * 0.5).round())),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -7,11 +7,23 @@ import '../providers/listings_provider.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/side_panel.dart';
+import 'package:provider/provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load listings when the screen initializes
+    Provider.of<ListingsProvider>(context, listen: false).refreshListings();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const StansListAppBar(),
@@ -24,7 +36,7 @@ class HomeScreen extends StatelessWidget {
                 if (provider.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (provider.listings.isEmpty) {
+                if (provider.listings.isEmpty && !provider.isLoading) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

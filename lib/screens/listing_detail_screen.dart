@@ -75,7 +75,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+ color: Colors.black.withAlpha((255 * 0.1).round()),
                                 spreadRadius: 1,
                                 blurRadius: 5,
                                 offset: const Offset(0, 2),
@@ -165,16 +165,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                       borderRadius: BorderRadius.circular(8),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
+                                          color: Colors.black.withValues(),
                                           spreadRadius: 0,
                                           blurRadius: 3,
                                           offset: const Offset(0, 1),
                                         )
                                       ]),
                                   child: Opacity(
-                                    opacity: _selectedImageIndex == index
-                                        ? 1.0
-                                        : 0.7, // Slightly more visible when not selected
+                                    opacity: _selectedImageIndex == index ? 1.0 : (255 * 0.7).round() / 255.0, // Slightly more visible when not selected
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(6),
                                       child: Image(

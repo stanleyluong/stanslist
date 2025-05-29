@@ -93,7 +93,7 @@ class ListingsScreen extends StatelessWidget {
                     crossAxisCount: _getCrossAxisCount(context),
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 0.8,
+                    childAspectRatio: 0.7,
                   ),
                   itemCount: listings.length,
                   itemBuilder: (context, index) {
