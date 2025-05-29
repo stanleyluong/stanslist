@@ -1,0 +1,40 @@
+# Flutter build artifacts
+build/
+
+# Other common Flutter ignores
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+
+# IDE specific files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Mobile build artifacts
+ios/Flutter/App.framework
+ios/Flutter/engine
+ios/Flutter/flutter_assets
+ios/Flutter/Generated.xcconfig
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+android/app/build
+android/.gradle
+
+# Web build artifacts
+build/web/
+
+# Desktop build artifacts
+build/linux/
+build/macos/
+build/windows/
+
+# Test outputs
+coverage/
+
+# Log files
+*.log
