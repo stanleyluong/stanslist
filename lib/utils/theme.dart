@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color primaryColor = Color(0xFF1E3A8A);
@@ -63,7 +62,5 @@ class AppTheme {
       ),
       margin: EdgeInsets.all(8),
     ),
-    fontFamily: GoogleFonts.notoSans().fontFamily,
-    textTheme: GoogleFonts.notoSansTextTheme(),
   );
 }

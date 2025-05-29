@@ -18,7 +18,7 @@ class ListingsProvider extends ChangeNotifier {
   String get selectedLocation => _selectedLocation;
 
   ListingsProvider() {
-    _loadListings();
+    // _loadListings(); // Removed: Listings are loaded via refreshListings called from UI post-build
   }
 
   List<Listing> _filteredListings() {

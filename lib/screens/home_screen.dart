@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stanslist/providers/listings_provider.dart';
 
-import '../providers/listings_provider.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/side_panel.dart';
-import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,10 +19,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load listings when the screen initializes
-    Provider.of<ListingsProvider>(context, listen: false).refreshListings();
+    // Load listings after the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future(() {
+        if (mounted) {
+          Provider.of<ListingsProvider>(context, listen: false)
+              .refreshListings();
+        }
+      });
+    });
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const StansListAppBar(),
