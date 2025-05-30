@@ -5,7 +5,7 @@ frontend:
       commands:
         # Install Flutter SDK dependencies using yum for Amazon Linux
         - sudo yum update -y
-        - sudo yum install -y curl git unzip xz zip mesa-libGLU GConf2 python3 # Adjusted packages for yum
+        - sudo yum install -y curl git unzip xz zip mesa-libGLU python3 # Adjusted packages for yum
         - git clone https://github.com/flutter/flutter.git -b 3.22.0 --depth 1 # Flutter version
         - export PATH="$PATH:`pwd`/flutter/bin"
         - flutter doctor -v # Verify Flutter installation
