@@ -7,7 +7,7 @@ frontend:
         - sudo yum update -y
         - sudo yum install -y --allowerasing curl git unzip xz zip mesa-libGLU python3 # Adjusted packages for yum
         - git clone https://github.com/flutter/flutter.git -b 3.22.0 --depth 1 # Flutter version
-        - export PATH="$PATH:`pwd`/flutter/bin"
+        - 'export PATH="$PATH:`pwd`/flutter/bin"' # Encapsulate command with colon in single quotes
         - flutter doctor -v # Verify Flutter installation
         - flutter clean
         - flutter pub get
