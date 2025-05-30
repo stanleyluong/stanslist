@@ -19,7 +19,8 @@ class MyListingsScreen extends StatefulWidget {
 }
 
 class _MyListingsScreenState extends State<MyListingsScreen> {
-  Future<void>? _initialLoadListingsFuture; // Renamed and typed for initial load
+  Future<void>?
+      _initialLoadListingsFuture; // Renamed and typed for initial load
   String? _loadedListingsForUserId;
 
   @override
@@ -55,7 +56,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     if (userId == null) {
       setState(() {
         // Clear future if user logs out
-        _initialLoadListingsFuture = Future.value(); 
+        _initialLoadListingsFuture = Future.value();
       });
       return;
     }
@@ -65,11 +66,12 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     // Use fetchListingsForUserIfNeeded for the FutureBuilder's future
     // This future completes when listings are available or an error occurs.
     // It doesn't return the list itself, that comes from a sync getter later.
-    _initialLoadListingsFuture = listingsProvider.fetchListingsForUserIfNeeded(userId);
+    _initialLoadListingsFuture =
+        listingsProvider.fetchListingsForUserIfNeeded(userId);
     // We might still need a setState here if _initialLoadListingsFuture was null
     // and is now being set, to make the FutureBuilder pick it up.
     if (mounted) {
-       setState(() {});
+      setState(() {});
     }
   }
 
@@ -110,9 +112,9 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     // Ensure _loadedListingsForUserId is in sync if build is called before didChangeDependencies
     // or if auth state changes rapidly.
     if (_loadedListingsForUserId != currentUserId) {
-        _loadUserListings(currentUserId);
+      _loadUserListings(currentUserId);
     }
-    
+
     final screenWidth = MediaQuery.of(context).size.width;
     final bool showSidePanel = screenWidth >= 768;
 
@@ -125,23 +127,30 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
             child: Column(
               children: [
                 Expanded(
-                  child: FutureBuilder<void>( // Future is now Future<void>
+                  child: FutureBuilder<void>(
+                    // Future is now Future<void>
                     future: _initialLoadListingsFuture,
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting && _loadedListingsForUserId == currentUserId) {
+                      if (snapshot.connectionState == ConnectionState.waiting &&
+                          _loadedListingsForUserId == currentUserId) {
                         return const Center(child: CircularProgressIndicator());
                       }
                       if (snapshot.hasError) {
                         return Center(
-                            child: Text('Error loading listings: ${snapshot.error}'));
+                            child: Text(
+                                'Error loading listings: ${snapshot.error}'));
                       }
 
                       // Data is ready or an error occurred, now get listings from provider
                       // Use a Consumer or Provider.of with listen:true here for live updates
-                      final listingsProvider = Provider.of<ListingsProvider>(context);
-                      final listings = listingsProvider.getCurrentlyLoadedUserListings(currentUserId);
+                      final listingsProvider =
+                          Provider.of<ListingsProvider>(context);
+                      final listings = listingsProvider
+                          .getCurrentlyLoadedUserListings(currentUserId);
 
-                      if (listings.isEmpty && snapshot.connectionState == ConnectionState.done && !snapshot.hasError) {
+                      if (listings.isEmpty &&
+                          snapshot.connectionState == ConnectionState.done &&
+                          !snapshot.hasError) {
                         // Initial load complete, no error, but no listings for this user
                         return Center(
                           child: Column(
@@ -158,7 +167,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                           ),
                         );
                       }
-                      
+
                       // If listings are available (or even if not, but not in initial empty state)
                       return Center(
                         child: Container(
@@ -169,7 +178,8 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                             itemBuilder: (context, index) {
                               final listing = listings[index];
                               return _MyListingCard(
-                                key: ValueKey(listing.id), // Key only depends on ID now
+                                key: ValueKey(
+                                    listing.id), // Key only depends on ID now
                                 listing: listing,
                                 // onListingStatusChanged callback is no longer needed for status toggles
                               );
@@ -190,7 +200,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         child: const Icon(Icons.add),
         tooltip: 'Create new listing',
       ),
-    ); 
+    );
   }
 }
 
@@ -224,7 +234,7 @@ class _MyListingCardState extends State<_MyListingCard> {
     final listingsProvider =
         Provider.of<ListingsProvider>(context, listen: false);
     final currencyFormatter =
-        NumberFormat.currency(symbol: "\$", decimalDigits: 0); 
+        NumberFormat.currency(symbol: "\$", decimalDigits: 0);
 
     final listing = widget.listing;
     final categoryInfo = Categories.getById(listing.category);
@@ -256,13 +266,14 @@ class _MyListingCardState extends State<_MyListingCard> {
         },
         child: Padding(
           padding: const EdgeInsets.all(12.0),
-          child: Row( // Main Row: Image on left, details+actions on right
+          child: Row(
+            // Main Row: Image on left, details+actions on right
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Image Section
               SizedBox(
-                width: 140, 
-                height: 140, 
+                width: 140,
+                height: 140,
                 child: listing.images.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(4.0),
@@ -305,9 +316,11 @@ class _MyListingCardState extends State<_MyListingCard> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween, // Distribute space
                   children: [
-                    Column( // Text details
+                    Column(
+                      // Text details
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -322,55 +335,69 @@ class _MyListingCardState extends State<_MyListingCard> {
                         const SizedBox(height: 4),
                         Text(
                           currencyFormatter.format(listing.price),
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: Colors.green.shade700,
-                              fontWeight: FontWeight.bold),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Chip(
                           avatar: Text(
                             _getCategoryIcon(),
                             style: TextStyle(
-                              fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize ?? 16, // Increased icon size
+                              fontSize: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.fontSize ??
+                                  16, // Increased icon size
                             ),
                           ),
-                          label: Text(_getFormattedCategoryName()), // Use formatted name
+                          label: Text(
+                              _getFormattedCategoryName()), // Use formatted name
                           padding: EdgeInsets.zero,
                           labelStyle: Theme.of(context).textTheme.bodySmall,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
                         ),
-                        const SizedBox(height: 8), 
-                        Text( 
+                        const SizedBox(height: 8),
+                        Text(
                           'Posted: ${DateFormat.yMMMd().format(listing.datePosted)}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
                     ),
                     // const Spacer(), // Use Spacer if buttons should be at the very bottom
-                                     // Or SizedBox for fixed spacing if preferred
+                    // Or SizedBox for fixed spacing if preferred
                     // Action Buttons
-                    LayoutBuilder( 
+                    LayoutBuilder(
                       builder: (context, constraints) {
                         final screenWidth = MediaQuery.of(context).size.width;
-                        if (screenWidth < 452) { // Changed breakpoint to 452px
+                        if (screenWidth < 452) {
+                          // Changed breakpoint to 452px
                           return PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_horiz), 
+                            icon: const Icon(Icons.more_horiz),
                             onSelected: (value) async {
                               if (value == 'toggleStatus') {
                                 final bool wasActive = listing.isActive;
                                 try {
-                                  await listingsProvider.toggleListingActiveStatus(listing);
+                                  await listingsProvider
+                                      .toggleListingActiveStatus(listing);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(wasActive ? 'Listing marked as sold.' : 'Listing marked as available.'),
+                                      content: Text(wasActive
+                                          ? 'Listing marked as sold.'
+                                          : 'Listing marked as available.'),
                                       duration: const Duration(seconds: 2),
                                     ),
                                   );
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Failed to update listing status: $e'),
+                                      content: Text(
+                                          'Failed to update listing status: $e'),
                                     ),
                                   );
                                 }
@@ -378,7 +405,9 @@ class _MyListingCardState extends State<_MyListingCard> {
                                 final String textToShare =
                                     'Check out this listing: ${listing.title} for ${currencyFormatter.format(listing.price)}\n'
                                     'View it here: ${Uri.base.origin}/#/listing/${listing.id}';
-                                Share.share(textToShare, subject: 'Check out this listing: ${listing.title}');
+                                Share.share(textToShare,
+                                    subject:
+                                        'Check out this listing: ${listing.title}');
                               } else if (value == 'edit') {
                                 context.go('/listing/${listing.id}/edit');
                               } else if (value == 'delete') {
@@ -399,7 +428,8 @@ class _MyListingCardState extends State<_MyListingCard> {
                                           onPressed: () =>
                                               Navigator.of(context).pop(true),
                                           child: const Text('Delete',
-                                              style: TextStyle(color: Colors.red)),
+                                              style:
+                                                  TextStyle(color: Colors.red)),
                                         ),
                                       ],
                                     );
@@ -407,17 +437,21 @@ class _MyListingCardState extends State<_MyListingCard> {
                                 );
                                 if (confirm == true) {
                                   try {
-                                    await listingsProvider.deleteListing(listing.id);
+                                    await listingsProvider
+                                        .deleteListing(listing.id);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                          content:
-                                              Text('Listing deleted')),
+                                          content: Text('Listing deleted')),
                                     );
                                     // Refresh listings after delete
-                                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                    final authProvider =
+                                        Provider.of<AuthProvider>(context,
+                                            listen: false);
                                     if (authProvider.currentUser?.uid != null) {
-                                      Provider.of<ListingsProvider>(context, listen: false)
-                                        .fetchListingsForUserIfNeeded(authProvider.currentUser!.uid);
+                                      Provider.of<ListingsProvider>(context,
+                                              listen: false)
+                                          .fetchListingsForUserIfNeeded(
+                                              authProvider.currentUser!.uid);
                                     }
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -429,10 +463,13 @@ class _MyListingCardState extends State<_MyListingCard> {
                                 }
                               }
                             },
-                            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                            itemBuilder: (BuildContext context) =>
+                                <PopupMenuEntry<String>>[
                               PopupMenuItem<String>(
                                 value: 'toggleStatus',
-                                child: Text(listing.isActive ? 'Mark as Sold' : 'Mark as Available'),
+                                child: Text(listing.isActive
+                                    ? 'Mark as Sold'
+                                    : 'Mark as Available'),
                               ),
                               const PopupMenuItem<String>(
                                 value: 'share',
@@ -444,7 +481,8 @@ class _MyListingCardState extends State<_MyListingCard> {
                               ),
                               const PopupMenuItem<String>(
                                 value: 'delete',
-                                child: Text('Delete', style: TextStyle(color: Colors.red)),
+                                child: Text('Delete',
+                                    style: TextStyle(color: Colors.red)),
                               ),
                             ],
                           );
@@ -457,36 +495,53 @@ class _MyListingCardState extends State<_MyListingCard> {
                             children: [
                               // 1. Mark as Sold/Available Button
                               Container(
-                                constraints: const BoxConstraints(minWidth: 150),
+                                constraints:
+                                    const BoxConstraints(minWidth: 150),
                                 child: TextButton.icon(
-                                  icon: Icon(listing.isActive ? Icons.visibility_off : Icons.visibility, size: 20),
+                                  icon: Icon(
+                                      listing.isActive
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      size: 20),
                                   label: Text(
-                                    listing.isActive ? 'Mark as Sold' : 'Mark as Available',
+                                    listing.isActive
+                                        ? 'Mark as Sold'
+                                        : 'Mark as Available',
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   onPressed: () async {
                                     final bool wasActive = listing.isActive;
                                     try {
-                                      await listingsProvider.toggleListingActiveStatus(listing);
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      await listingsProvider
+                                          .toggleListingActiveStatus(listing);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
-                                          content: Text(wasActive ? 'Listing marked as sold.' : 'Listing marked as available.'),
+                                          content: Text(wasActive
+                                              ? 'Listing marked as sold.'
+                                              : 'Listing marked as available.'),
                                           duration: const Duration(seconds: 2),
                                         ),
                                       );
                                     } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
-                                          content: Text('Failed to update listing status: $e'),
+                                          content: Text(
+                                              'Failed to update listing status: $e'),
                                         ),
                                       );
                                     }
                                   },
                                   style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
                                     visualDensity: VisualDensity.compact,
-                                    foregroundColor: listing.isActive ? Colors.orangeAccent : Colors.green,
+                                    foregroundColor: listing.isActive
+                                        ? Colors.orangeAccent
+                                        : Colors.green,
                                   ),
                                 ),
                               ),
@@ -498,7 +553,9 @@ class _MyListingCardState extends State<_MyListingCard> {
                                   final String textToShare =
                                       'Check out this listing: ${listing.title} for ${currencyFormatter.format(listing.price)}\n'
                                       'View it here: ${Uri.base.origin}/#/listing/${listing.id}';
-                                  Share.share(textToShare, subject: 'Check out this listing: ${listing.title}');
+                                  Share.share(textToShare,
+                                      subject:
+                                          'Check out this listing: ${listing.title}');
                                 },
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
@@ -529,14 +586,16 @@ class _MyListingCardState extends State<_MyListingCard> {
                                         actions: <Widget>[
                                           TextButton(
                                             onPressed: () =>
-                                                Navigator.of(context).pop(false),
+                                                Navigator.of(context)
+                                                    .pop(false),
                                             child: const Text('Cancel'),
                                           ),
                                           TextButton(
                                             onPressed: () =>
                                                 Navigator.of(context).pop(true),
                                             child: const Text('Delete',
-                                                style: TextStyle(color: Colors.red)),
+                                                style: TextStyle(
+                                                    color: Colors.red)),
                                           ),
                                         ],
                                       );
@@ -544,19 +603,26 @@ class _MyListingCardState extends State<_MyListingCard> {
                                   );
                                   if (confirm == true) {
                                     try {
-                                      await listingsProvider.deleteListing(listing.id);
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      await listingsProvider
+                                          .deleteListing(listing.id);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         const SnackBar(
-                                            content:
-                                                Text('Listing deleted')),
+                                            content: Text('Listing deleted')),
                                       );
-                                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                                      if (authProvider.currentUser?.uid != null) {
-                                        Provider.of<ListingsProvider>(context, listen: false)
-                                          .fetchListingsForUserIfNeeded(authProvider.currentUser!.uid);
+                                      final authProvider =
+                                          Provider.of<AuthProvider>(context,
+                                              listen: false);
+                                      if (authProvider.currentUser?.uid !=
+                                          null) {
+                                        Provider.of<ListingsProvider>(context,
+                                                listen: false)
+                                            .fetchListingsForUserIfNeeded(
+                                                authProvider.currentUser!.uid);
                                       }
                                     } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
                                             content: Text(
                                                 'Failed to delete listing: $e')),

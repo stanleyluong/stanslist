@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 // Add these imports for web map display
 // import 'dart:ui' as ui; // Keep for other UI elements if needed, or remove if not used elsewhere
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web; // Import for platformViewRegistry on web
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/category.dart';
 import '../models/listing.dart';
@@ -679,7 +679,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not open map for directions to "$locationQuery"'),
+            content:
+                Text('Could not open map for directions to "$locationQuery"'),
           ),
         );
       }
@@ -687,7 +688,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   }
 
   // Widget to build the map view for web
-  Widget _buildMapView(String locationQuery) { // Remove apiKey parameter
+  Widget _buildMapView(String locationQuery) {
+    // Remove apiKey parameter
     final String iframeId = 'map-iframe-${widget.listingId}';
     // Use ui_web.platformViewRegistry
     ui_web.platformViewRegistry.registerViewFactory(
@@ -696,7 +698,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         ..width = '100%'
         ..height = '100%'
         // Use the compile-time variable _googleMapsApiKey here
-        ..src = 'https://www.google.com/maps/embed/v1/place?key=$_googleMapsApiKey&q=${Uri.encodeComponent(locationQuery)}'
+        ..src =
+            'https://www.google.com/maps/embed/v1/place?key=$_googleMapsApiKey&q=${Uri.encodeComponent(locationQuery)}'
         ..style.border = 'none',
     );
     return HtmlElementView(viewType: iframeId);

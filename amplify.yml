@@ -3,11 +3,26 @@ frontend:
   phases:
     preBuild:
       commands:
+        # Install Flutter SDK
+        - apt-get update -y
+        - apt-get install -y curl git unzip libgconf-2-4 gdb libstdc++6 libglu1-mesa fonts-droid-fallback lib32stdc++6 python3
+        - git clone https://github.com/flutter/flutter.git -b 3.22.0 --depth 1 # Updated Flutter version
+        - export PATH="$PATH:`pwd`/flutter/bin"
+        - flutter doctor -v # Verify Flutter installation
         - flutter clean
         - flutter pub get
     build:
       commands:
-        - flutter build web --release --dart-define=FLUTTER_WEB_USE_SKIA=true
+        - flutter build web --release \
+          --dart-define=FLUTTER_WEB_USE_SKIA=true \
+          --dart-define=FIREBASE_API_KEY=$FIREBASE_API_KEY \
+          --dart-define=FIREBASE_APP_ID=$FIREBASE_APP_ID \
+          --dart-define=FIREBASE_MESSAGING_SENDER_ID=$FIREBASE_MESSAGING_SENDER_ID \
+          --dart-define=FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID \
+          --dart-define=FIREBASE_AUTH_DOMAIN=$FIREBASE_AUTH_DOMAIN \
+          --dart-define=FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET \
+          --dart-define=FIREBASE_MEASUREMENT_ID=$FIREBASE_MEASUREMENT_ID \
+          --dart-define=GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY
   artifacts:
     baseDirectory: build/web
     files:
@@ -15,3 +30,4 @@ frontend:
   cache:
     paths:
       - $HOME/.pub-cache/**/*
+      - flutter/**/* # Cache Flutter SDK
