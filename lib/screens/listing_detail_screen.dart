@@ -23,7 +23,36 @@ class ListingDetailScreen extends StatefulWidget {
 
 class _ListingDetailScreenState extends State<ListingDetailScreen> {
   int _selectedImageIndex = 0;
-  final PageController _pageController = PageController(); // Add PageController
+  final PageController _pageController = PageController();
+  bool _isFetchingListing = false; // To prevent multiple fetches
+
+  @override
+  void initState() {
+    super.initState();
+    // Attempt to fetch the listing if not already available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<ListingsProvider>(context, listen: false);
+      final listing = provider.getListingById(widget.listingId);
+      if (listing == null && !provider.isLoading && !_isFetchingListing) {
+        setState(() {
+          _isFetchingListing = true;
+        });
+        provider.refreshListings().then((_) {
+          if (mounted) {
+            setState(() {
+              _isFetchingListing = false;
+            });
+          }
+        }).catchError((_) {
+          if (mounted) {
+            setState(() {
+              _isFetchingListing = false;
+            });
+          }
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -33,10 +62,22 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool showSidePanel = screenWidth >= 768;
+    // Threshold for showing details in a separate right-hand column.
+    // Adjusted to 1050px to give more space for image + details when side panel is present.
+    final bool showDetailsPanelAside = screenWidth >= 1050;
+
     return Scaffold(
       appBar: const StansListAppBar(),
       body: Consumer<ListingsProvider>(
         builder: (context, provider, child) {
+          // If listings are still loading from the initState call, show loading indicator
+          if (_isFetchingListing ||
+              (provider.isLoading && provider.listings.isEmpty)) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           final listing = provider.getListingById(widget.listingId);
 
           if (listing == null) {
@@ -45,339 +86,369 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             );
           }
 
-          // Use placeholder if no images
           final images = listing.images.isEmpty
               ? ['assets/images/placeholder-image.jpg']
               : listing.images;
 
-          return Row(
+          // Define the details content widget once
+          Widget detailsContentColumn = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left side panel for navigation
-              const SidePanel(),
+              // Title
+              Text(
+                listing.title,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 12),
 
-              // Main content area
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Main large image in the middle
-                      Container(
-                        constraints: const BoxConstraints(
-                          maxHeight:
-                              500, // Keep maxHeight for the image display area
-                          maxWidth: 700, // Add a maxWidth for better layout
-                        ),
-                        margin: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
- color: Colors.black.withAlpha((255 * 0.1).round()),
-                                spreadRadius: 1,
-                                blurRadius: 5,
-                                offset: const Offset(0, 2),
-                              )
-                            ]),
-                        child: images.isNotEmpty
-                            ? PageView.builder(
-                                // Use PageView for swipeable images
-                                controller: _pageController,
-                                itemCount: images.length,
-                                onPageChanged: (index) {
-                                  setState(() {
-                                    _selectedImageIndex = index;
-                                  });
-                                },
-                                itemBuilder: (context, index) {
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image(
-                                      image: images[index].startsWith('assets/')
-                                          ? AssetImage(images[index])
-                                          : NetworkImage(images[index])
-                                              as ImageProvider,
-                                      fit: BoxFit.contain,
-                                      // Add error builder for network images
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return const Center(
-                                          child: Icon(
-                                            Icons.broken_image,
-                                            size: 64,
-                                            color: Colors.grey,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              )
-                            : const Center(
-                                child: Icon(
-                                  Icons.image,
-                                  size: 64,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                      ),
+              // Price
+              Text(
+                NumberFormat.currency(
+                        symbol: '\$',
+                        decimalDigits: 0) // Corrected: removed extra backslash
+                    .format(listing.price),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 20),
 
-                      // Image gallery at the bottom
-                      if (images.length > 1)
-                        Container(
-                          height: 80, // Reduced height for thumbnails
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: images.length,
-                            itemBuilder: (context, index) {
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedImageIndex = index;
-                                    _pageController.animateToPage(
-                                      // Animate PageView
-                                      index,
-                                      duration:
-                                          const Duration(milliseconds: 300),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  });
-                                },
-                                child: Container(
-                                  width: 80, // Square thumbnails
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 4),
-                                  decoration: BoxDecoration(
-                                      border: _selectedImageIndex == index
-                                          ? Border.all(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                              width:
-                                                  2.5) // Slightly thicker border
-                                          : Border.all(
-                                              color: Colors.grey.shade400,
-                                              width: 1),
-                                      borderRadius: BorderRadius.circular(8),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(),
-                                          spreadRadius: 0,
-                                          blurRadius: 3,
-                                          offset: const Offset(0, 1),
-                                        )
-                                      ]),
-                                  child: Opacity(
-                                    opacity: _selectedImageIndex == index ? 1.0 : (255 * 0.7).round() / 255.0, // Slightly more visible when not selected
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Image(
-                                        image:
-                                            images[index].startsWith('assets/')
-                                                ? AssetImage(images[index])
-                                                : NetworkImage(images[index])
-                                                    as ImageProvider,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+              // Category chip
+              Row(
+                children: [
+                  const Icon(Icons.category_outlined, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Chip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            Categories.getById(listing.category)?.icon ?? '📦',
+                            style: const TextStyle(fontSize: 16),
                           ),
-                        ),
-                    ],
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              Categories.getById(listing.category)?.name ??
+                                  listing.category,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withAlpha((255 * 0.1).round()),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Location and date
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      listing.location,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Posted ${DateFormat.yMMMd().format(listing.createdAt)}",
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+              const Divider(height: 30),
+
+              // Category-specific details (if available)
+              if (listing.categoryFields.isNotEmpty) ...[
+                Text(
+                  'Details',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 10),
+                _buildCategorySpecificDetails(context, listing),
+                const Divider(height: 30),
+              ],
+
+              // Description
+              Text(
+                'Description',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                listing.description,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const Divider(height: 30),
+
+              // Contact Information
+              Text(
+                'Contact Seller',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 16),
+
+              // Email button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _launchEmail(listing.contactEmail),
+                  icon: const Icon(Icons.email),
+                  label: Text('Email: ${listing.contactEmail}'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.all(16),
                   ),
                 ),
               ),
 
-              // Right side details panel
-              Container(
-                width: 350,
-                height: MediaQuery.of(context).size.height,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  border: Border(
-                    left: BorderSide(
-                      color: Colors.grey.shade300,
-                      width: 1,
+              // Phone button (if available)
+              if (listing.contactPhone != null) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _launchPhone(listing.contactPhone!),
+                    icon: const Icon(Icons.phone),
+                    label: Text('Call: ${listing.contactPhone}'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
                     ),
                   ),
                 ),
+              ],
+            ],
+          );
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (showSidePanel)
+                const SidePanel(), // Conditionally show SidePanel
+              Expanded(
                 child: SingleChildScrollView(
+                  // Main content area (image + potentially details)
+                  padding: const EdgeInsets.all(
+                      16.0), // Padding for the content within this scroll view
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
-                      Text(
-                        listing.title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Price
-                      Text(
-                        NumberFormat.currency(symbol: '\$', decimalDigits: 0)
-                            .format(listing.price),
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Category chip
-                      Row(
-                        children: [
-                          const Icon(Icons.category_outlined, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            // Wrap Chip with Expanded
-                            child: Chip(
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    Categories.getById(listing.category)
-                                            ?.icon ??
-                                        '📦',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      Categories.getById(listing.category)
-                                              ?.name ??
-                                          listing.category,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                      // Image Display Section (using existing LayoutBuilder for margins)
+                      LayoutBuilder(builder: (context, constraints) {
+                        // Adjust isNarrow threshold if needed, based on constraints.maxWidth
+                        final bool isNarrow = constraints.maxWidth <
+                            400; // Reduced threshold slightly
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              // Main Image
+                              constraints: const BoxConstraints(
+                                maxHeight: 500,
+                                // maxWidth: 700, // MaxWidth is less critical here as parent constrains it
                               ),
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withAlpha((255 * 0.1).round()),
+                              margin: EdgeInsets.symmetric(
+                                vertical: 20,
+                                // Horizontal margin is 0 if narrow (padding handles it), else a small margin
+                                horizontal: isNarrow ? 0 : 8,
+                              ),
+                              decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black
+                                          .withAlpha((255 * 0.1).round()),
+                                      spreadRadius: 1,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ]),
+                              child: images.isNotEmpty
+                                  ? PageView.builder(
+                                      controller: _pageController,
+                                      itemCount: images.length,
+                                      onPageChanged: (index) {
+                                        setState(() {
+                                          _selectedImageIndex = index;
+                                        });
+                                      },
+                                      itemBuilder: (context, index) {
+                                        return ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          child: Image(
+                                            image: images[index]
+                                                    .startsWith('assets/')
+                                                ? AssetImage(images[index])
+                                                : NetworkImage(images[index])
+                                                    as ImageProvider,
+                                            fit: BoxFit.contain,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              return const Center(
+                                                child: Icon(
+                                                  Icons.broken_image,
+                                                  size: 64,
+                                                  color: Colors.grey,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : const Center(
+                                      child: Icon(
+                                        Icons.image,
+                                        size: 64,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                            if (images.length > 1) // Thumbnails
+                              Container(
+                                height: 80,
+                                margin: EdgeInsets.symmetric(
+                                  horizontal: isNarrow
+                                      ? 0
+                                      : 8, // Consistent with image margin
+                                  vertical: 10,
+                                ),
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: images.length,
+                                  itemBuilder: (context, index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedImageIndex = index;
+                                          _pageController.animateToPage(
+                                            index,
+                                            duration: const Duration(
+                                                milliseconds: 300),
+                                            curve: Curves.easeInOut,
+                                          );
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 80,
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 4),
+                                        decoration: BoxDecoration(
+                                            border: _selectedImageIndex == index
+                                                ? Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    width: 2.5)
+                                                : Border.all(
+                                                    color: Colors.grey.shade400,
+                                                    width: 1),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                    0.1), // Corrected withOpacity
+                                                spreadRadius: 0,
+                                                blurRadius: 3,
+                                                offset: const Offset(0, 1),
+                                              )
+                                            ]),
+                                        child: Opacity(
+                                          opacity: _selectedImageIndex == index
+                                              ? 1.0
+                                              : 0.7, // Corrected opacity
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                            child: Image(
+                                              image: images[index]
+                                                      .startsWith('assets/')
+                                                  ? AssetImage(images[index])
+                                                  : NetworkImage(images[index])
+                                                      as ImageProvider,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                          ],
+                        );
+                      }),
 
-                      // Location and date
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 16,
-                            color: Colors.grey.shade600,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              listing.location,
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            size: 16,
-                            color: Colors.grey.shade600,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            "Posted ${DateFormat.yMMMd().format(listing.createdAt)}",
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 30),
-
-                      // Category-specific details (if available)
-                      if (listing.categoryFields.isNotEmpty) ...[
-                        Text(
-                          'Details',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                      if (!showDetailsPanelAside) ...[
+                        // If details are not in a separate column, show them here
+                        const Divider(
+                            height: 40,
+                            thickness: 1,
+                            indent: 16,
+                            endIndent: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal:
+                                  8.0), // Add some horizontal padding for stacked details
+                          child: detailsContentColumn,
                         ),
-                        const SizedBox(height: 10),
-                        _buildCategorySpecificDetails(context, listing),
-                        const Divider(height: 30),
-                      ],
-
-                      // Description
-                      Text(
-                        'Description',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        listing.description,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const Divider(height: 30),
-
-                      // Contact Information
-                      Text(
-                        'Contact Seller',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Email button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _launchEmail(listing.contactEmail),
-                          icon: const Icon(Icons.email),
-                          label: Text('Email: ${listing.contactEmail}'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.all(16),
-                          ),
-                        ),
-                      ),
-
-                      // Phone button (if available)
-                      if (listing.contactPhone != null) ...[
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () =>
-                                _launchPhone(listing.contactPhone!),
-                            icon: const Icon(Icons.phone),
-                            label: Text('Call: ${listing.contactPhone}'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.all(16),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ]
                     ],
                   ),
                 ),
               ),
+              if (showDetailsPanelAside) // Conditionally show the right-hand details panel
+                Container(
+                  width: 350,
+                  height: MediaQuery.of(context)
+                      .size
+                      .height, // Make it fill the height
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .scaffoldBackgroundColor, // Added background color
+                    border: Border(
+                      left: BorderSide(
+                        color: Colors.grey.shade300,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: SingleChildScrollView(child: detailsContentColumn),
+                ),
             ],
           );
         },

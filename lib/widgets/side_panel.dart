@@ -13,8 +13,15 @@ class SidePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 280, // Adjust width as needed
-      color: Theme.of(context).canvasColor, // Or a specific side panel color
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context)
+            .scaffoldBackgroundColor, // Match scaffold background color
+        border: Border(
+          right: BorderSide(
+              color: Colors.grey.shade300, width: 1), // Add subtle border
+        ),
+      ),
       child: ListView(
         children: [
           Text(

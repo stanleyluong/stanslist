@@ -151,6 +151,29 @@ class ListingsProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> toggleListingActiveStatus(Listing listingToUpdate) async {
+    final updatedListing =
+        listingToUpdate.copyWith(isActive: !listingToUpdate.isActive);
+    try {
+      // Update in Firestore
+      await _firestore
+          .collection('listings')
+          .doc(listingToUpdate.id)
+          .update({'isActive': updatedListing.isActive});
+
+      // Update in local list
+      final index =
+          _listings.indexWhere((listing) => listing.id == listingToUpdate.id);
+      if (index != -1) {
+        _listings[index] = updatedListing;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error toggling listing active status: $e');
+      throw e;
+    }
+  }
+
   Listing? getListingById(String id) {
     try {
       return _listings.firstWhere((listing) => listing.id == id);
@@ -167,7 +190,7 @@ class ListingsProvider extends ChangeNotifier {
 
   Future<void> _loadListings() async {
     _isLoading = true;
-    notifyListeners();
+    // Removed notifyListeners() here
 
     try {
       final querySnapshot = await _firestore
@@ -187,7 +210,8 @@ class ListingsProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
-    notifyListeners();
+    // Delay notifyListeners to avoid calling during build
+    Future.microtask(() => notifyListeners());
   }
 
   // Method to refresh listings from Firestore
@@ -203,5 +227,21 @@ class ListingsProvider extends ChangeNotifier {
     }
     // Filter listings by userId
     return _listings.where((listing) => listing.userId == userId).toList();
+  }
+
+  // New synchronous getter for already loaded user listings
+  List<Listing> getCurrentlyLoadedUserListings(String userId) {
+    return _listings.where((listing) => listing.userId == userId).toList();
+  }
+
+  // New method for FutureBuilder to ensure listings are loaded
+  Future<void> fetchListingsForUserIfNeeded(String userId) async {
+    // userId is not strictly used here if _loadListings loads all,
+    // but kept for semantic consistency with how it might be called.
+    if (_listings.isEmpty && !_isLoading) {
+      await _loadListings();
+    }
+    // If _isLoading, another load is in progress.
+    // If _listings is populated, data is available.
   }
 }

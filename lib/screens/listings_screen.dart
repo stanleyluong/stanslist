@@ -7,100 +7,118 @@ import '../widgets/app_bar.dart';
 import '../widgets/filters_bar.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/search_bar.dart';
+import '../widgets/side_panel.dart';
 
 class ListingsScreen extends StatelessWidget {
   const ListingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Determine if we should show the side panel
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool showSidePanel = screenWidth >= 768; // Desktop threshold
+
     return Scaffold(
       appBar: const StansListAppBar(),
-      body: Column(
+      body: Row(
         children: [
-          // Search and Filters
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((255 * 0.1).round()),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+          // Show side panel on desktop view
+          if (showSidePanel) const SidePanel(),
+          // Main content area
+          Expanded(
+            child: Column(
+              children: [
+                // Search and Filters
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha((255 * 0.1).round()),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Column(
+                    children: [
+                      StansListSearchBar(),
+                      SizedBox(height: 16),
+                      FiltersBar(),
+                    ],
+                  ),
+                ),
+
+                // Listings Grid
+                Expanded(
+                  child: Consumer<ListingsProvider>(
+                    builder: (context, provider, child) {
+                      if (provider.isLoading) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
+                      final listings = provider.listings;
+
+                      if (listings.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.inbox_outlined,
+                                size: 64,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No listings found',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: Colors.grey.shade600,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Try adjusting your search or filters',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.grey.shade500,
+                                    ),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton(
+                                onPressed: () => provider.clearFilters(),
+                                child: const Text('Clear Filters'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: _getCrossAxisCount(context),
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.7,
+                        ),
+                        itemCount: listings.length,
+                        itemBuilder: (context, index) {
+                          return ListingCard(listing: listings[index]);
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
-            ),
-            child: const Column(
-              children: [
-                StansListSearchBar(),
-                SizedBox(height: 16),
-                FiltersBar(),
-              ],
-            ),
-          ),
-
-          // Listings Grid
-          Expanded(
-            child: Consumer<ListingsProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                final listings = provider.listings;
-
-                if (listings.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.inbox_outlined,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No listings found',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Try adjusting your search or filters',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey.shade500,
-                                  ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => provider.clearFilters(),
-                          child: const Text('Clear Filters'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: _getCrossAxisCount(context),
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.7,
-                  ),
-                  itemCount: listings.length,
-                  itemBuilder: (context, index) {
-                    return ListingCard(listing: listings[index]);
-                  },
-                );
-              },
             ),
           ),
         ],

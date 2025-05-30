@@ -32,11 +32,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool showSidePanel =
+        screenWidth > 768; // Example breakpoint, adjust as needed
+
     return Scaffold(
       appBar: const StansListAppBar(),
       body: Row(
         children: [
-          const SidePanel(),
+          if (showSidePanel) // Conditionally display SidePanel
+            const SidePanel(),
           Expanded(
             child: Consumer<ListingsProvider>(
               builder: (context, provider, child) {
@@ -70,21 +75,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
 
                 // Display all listings in a Staggered Grid View
-                return Padding(
-                  padding: const EdgeInsets.all(
-                      12.0), // Add some padding around the grid
-                  child: MasonryGridView.count(
-                    crossAxisCount: MediaQuery.of(context).size.width > 1200
-                        ? 4
-                        : (MediaQuery.of(context).size.width > 800 ? 3 : 2),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    itemCount: provider.listings.length,
-                    itemBuilder: (context, index) {
-                      final listing = provider.listings[index];
-                      return ListingCard(listing: listing);
-                    },
-                  ),
+                return Column(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(
+                            12.0), // Add some padding around the grid
+                        child: MasonryGridView.count(
+                          crossAxisCount:
+                              MediaQuery.of(context).size.width > 1200
+                                  ? 4
+                                  : (MediaQuery.of(context).size.width > 800
+                                      ? 3
+                                      : 2),
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          itemCount: provider.listings.length,
+                          itemBuilder: (context, index) {
+                            final listing = provider.listings[index];
+                            return ListingCard(listing: listing);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

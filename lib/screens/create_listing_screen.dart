@@ -1,11 +1,12 @@
 import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/category.dart' as models;
 import '../models/listing.dart';
@@ -53,7 +54,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     }
     _controllers.forEach((key, controller) {
       controller.addListener(() {
-        if (mounted) { // Add mounted check
+        if (mounted) {
+          // Add mounted check
           setState(() {
             // This will trigger a rebuild of the preview
           });
@@ -89,7 +91,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         _editingListing = listing;
         _controllers['title']!.text = listing.title;
         _controllers['description']!.text = listing.description;
-        _controllers['price']!.text = listing.price.toStringAsFixed(2); // Ensure correct format
+        _controllers['price']!.text =
+            listing.price.toStringAsFixed(2); // Ensure correct format
         _controllers['location']!.text = listing.location;
         _controllers['email']!.text = listing.contactEmail;
         _controllers['phone']!.text = listing.contactPhone ?? '';
@@ -99,7 +102,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         // The ListingFormPanel is responsible for creating the UI for these fields.
         // This section ensures that if data exists for those fields, the controllers are populated.
         listing.categoryFields.forEach((fieldName, value) {
-          final controllerKey = '${_selectedCategoryId.replaceAll('-', '_')}_$fieldName';
+          final controllerKey =
+              '${_selectedCategoryId.replaceAll('-', '_')}_$fieldName';
           // Ensure controller exists. ListingFormPanel should create them,
           // but we can initialize them here if they are accessed before ListingFormPanel builds.
           if (!_controllers.containsKey(controllerKey)) {
@@ -111,23 +115,25 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           }
           _controllers[controllerKey]!.text = value?.toString() ?? '';
         });
-        
+
         // Image handling for editing:
         // For now, existing images are not pre-loaded into the picker.
         // The user must re-select images if they want to change them.
         // A more robust solution would display existing images and allow managing them.
         if (listing.images.isNotEmpty) {
-          print('Editing listing with ID: ${listing.id}. Existing images: ${listing.images}. User must re-select to change images.');
+          print(
+              'Editing listing with ID: ${listing.id}. Existing images: ${listing.images}. User must re-select to change images.');
           // To display existing images in the preview (read-only initially):
           // You might want to fetch and convert image URLs to Uint8List if needed for a consistent preview,
           // or adjust the preview logic to handle URLs directly.
           // For simplicity, _imageBytesList and _imageFiles remain for NEW uploads.
         }
-
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Listing not found for editing.'), backgroundColor: Colors.red),
+            const SnackBar(
+                content: Text('Listing not found for editing.'),
+                backgroundColor: Colors.red),
           );
           context.go('/my-posts');
         }
@@ -135,7 +141,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading listing data: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error loading listing data: $e'),
+              backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -251,21 +259,25 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
     if (mounted) setState(() => _isSubmitting = true);
 
-    List<String> imageUrls = _editingListing?.images ?? []; // Start with existing images if editing
+    List<String> imageUrls =
+        _editingListing?.images ?? []; // Start with existing images if editing
 
     // If new images were selected, upload them and replace/add to imageUrls
     if (_imageFiles.isNotEmpty) {
-      imageUrls = await _uploadImages(_imageFiles); // This will overwrite if new images are picked
-      if (imageUrls.isEmpty) { // Check if new uploads failed
-         if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Image upload failed for all selected images. Please try again.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-            setState(() => _isSubmitting = false);
-         }
+      imageUrls = await _uploadImages(
+          _imageFiles); // This will overwrite if new images are picked
+      if (imageUrls.isEmpty) {
+        // Check if new uploads failed
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Image upload failed for all selected images. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() => _isSubmitting = false);
+        }
         return;
       }
     } else if (_editingListing != null && _imageFiles.isEmpty) {
@@ -273,20 +285,20 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       imageUrls = _editingListing!.images;
     }
 
-
-    if (imageUrls.isEmpty && _editingListing == null) { // Final check: if creating, must have images
-        if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Image upload failed or no images selected. Please try again.'),
-                    backgroundColor: Colors.red,
-                ),
-            );
-            setState(() => _isSubmitting = false);
-        }
-        return;
+    if (imageUrls.isEmpty && _editingListing == null) {
+      // Final check: if creating, must have images
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Image upload failed or no images selected. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isSubmitting = false);
+      }
+      return;
     }
-
 
     final currentUser =
         Provider.of<AuthProvider>(context, listen: false).currentUser;
@@ -341,18 +353,22 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           ? _controllers['phone']!.text
           : null,
       userId: currentUser.uid,
-      datePosted: _editingListing?.datePosted ?? DateTime.now(), // Preserve original post date if editing
-      createdAt: _editingListing?.createdAt ?? DateTime.now(), // Preserve original creation time if editing
+      datePosted: _editingListing?.datePosted ??
+          DateTime.now(), // Preserve original post date if editing
+      createdAt: _editingListing?.createdAt ??
+          DateTime.now(), // Preserve original creation time if editing
       categoryFields: categoryFields,
       // isActive will default to true in the model if not specified
     );
 
     try {
-      final listingsProvider = Provider.of<ListingsProvider>(context, listen: false);
+      final listingsProvider =
+          Provider.of<ListingsProvider>(context, listen: false);
       if (_editingListing != null) {
         // If _editingListing is not null, then listingToSubmit.id is also not null.
         // The analyzer suggests removing '!' as it's redundant.
-        await listingsProvider.updateListing(listingToSubmit.id, listingToSubmit); 
+        await listingsProvider.updateListing(
+            listingToSubmit.id, listingToSubmit);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -360,7 +376,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          context.go('/my-posts'); 
+          context.go('/my-posts');
         }
       } else {
         await listingsProvider.addListing(listingToSubmit);
@@ -561,8 +577,12 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         itemBuilder: (context, index) {
           final bytes = _imageBytesList[index];
           return bytes != null
-              ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(bytes, fit: BoxFit.contain))
-              : Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey[400]));
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(bytes, fit: BoxFit.contain))
+              : Center(
+                  child: Icon(Icons.broken_image,
+                      size: 50, color: Colors.grey[400]));
         },
       );
     } else if (hasNewNonWebImages) {
@@ -570,7 +590,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         itemCount: _imageFiles.length,
         itemBuilder: (context, index) {
           final file = _imageFiles[index];
-          return ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(File(file.path), fit: BoxFit.contain));
+          return ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(File(file.path), fit: BoxFit.contain));
         },
       );
     } else if (previewImageUrls.isNotEmpty) {
@@ -579,13 +601,18 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         itemBuilder: (context, index) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(previewImageUrls[index], fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey[400]))),
+            child: Image.network(previewImageUrls[index],
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Center(
+                    child: Icon(Icons.broken_image,
+                        size: 50, color: Colors.grey[400]))),
           );
         },
       );
     } else {
-      imagePreviewWidget = Center(child: Icon(Icons.camera_alt_outlined, size: 50, color: Colors.grey[400]));
+      imagePreviewWidget = Center(
+          child: Icon(Icons.camera_alt_outlined,
+              size: 50, color: Colors.grey[400]));
     }
 
     // Get raw price string for parsing
@@ -620,11 +647,17 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((255 * 0.3).round()),
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withAlpha((255 * 0.3).round()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withAlpha((255 * 0.5).round())),
+            color: Theme.of(context)
+                .colorScheme
+                .outline
+                .withAlpha((255 * 0.5).round())),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -725,64 +758,68 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
     return Scaffold(
       appBar: StansListAppBar(
-        // Title can be customized here if StansListAppBar is modified to accept it
-        // For now, keeping it as is.
-        // titleText: widget.listingId != null ? 'Edit Listing' : 'Create Listing',
-      ),
+          // Title can be customized here if StansListAppBar is modified to accept it
+          // For now, keeping it as is.
+          // titleText: widget.listingId != null ? 'Edit Listing' : 'Create Listing',
+          ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
           : Row(
-        children: [
-          // Form Panel (Left Side)
-          SizedBox(
-            width: isWideScreen
-                ? 380
-                : MediaQuery.of(context)
-                    .size
-                    .width, // Full width on small screens
-            child: Form(
-              // Wrap ListingFormPanel with a Form widget
-              key: _formKey, // Assign the _formKey
-              child: ListingFormPanel(
-                key: ValueKey(
-                    _selectedCategoryId), // Ensure panel rebuilds on category change for controller init
-                onFormDataChanged: _onFormDataChanged,
-                onImagesChanged: _onImagesChanged, // Pass the callback
-                onSubmit: _submitForm,
-                controllers: _controllers,
-                initialSelectedCategory: _selectedCategoryId,
-                initialImageFiles: _imageFiles, // Pass initial files
-                initialImageBytesList: _imageBytesList, // Pass initial bytes
-                isSubmitting: _isSubmitting,
-                // Pass the form key to ListingFormPanel if it needs to use it
-                // formKey: _formKey, // This would require ListingFormPanel to accept it
-              ), // Closes ListingFormPanel
-            ), // Closes Form
-          ), // Closes SizedBox
-          // Preview Panel (Right Side - only on wide screens)
-          if (isWideScreen)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Live Preview',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
+              children: [
+                // Form Panel (Left Side)
+                SizedBox(
+                  width: isWideScreen
+                      ? 380
+                      : MediaQuery.of(context)
+                          .size
+                          .width, // Full width on small screens
+                  child: Form(
+                    // Wrap ListingFormPanel with a Form widget
+                    key: _formKey, // Assign the _formKey
+                    child: ListingFormPanel(
+                      key: ValueKey(
+                          _selectedCategoryId), // Ensure panel rebuilds on category change for controller init
+                      onFormDataChanged: _onFormDataChanged,
+                      onImagesChanged: _onImagesChanged, // Pass the callback
+                      onSubmit: _submitForm,
+                      controllers: _controllers,
+                      initialSelectedCategory: _selectedCategoryId,
+                      initialImageFiles: _imageFiles, // Pass initial files
+                      initialImageBytesList:
+                          _imageBytesList, // Pass initial bytes
+                      isSubmitting: _isSubmitting,
+                      // Pass the form key to ListingFormPanel if it needs to use it
+                      // formKey: _formKey, // This would require ListingFormPanel to accept it
+                    ), // Closes ListingFormPanel
+                  ), // Closes Form
+                ), // Closes SizedBox
+                // Preview Panel (Right Side - only on wide screens)
+                if (isWideScreen)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Live Preview',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
+                            const SizedBox(height: 16),
+                            _buildPreview(context),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      _buildPreview(context),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+              ],
             ),
-        ],
-      ),
     );
   }
 }

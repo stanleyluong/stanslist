@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/auth_provider.dart';
+import 'screens/all_categories_screen.dart'; // Import the new screen
 import 'screens/auth_screen.dart';
 import 'screens/category_screen.dart';
 import 'screens/create_listing_screen.dart';
@@ -53,7 +54,8 @@ GoRouter _createRouter(AuthProvider authProvider) {
       ),
       GoRoute(
         path: '/create',
-        builder: (context, state) => const CreateListingScreen(), // For creating new listings
+        builder: (context, state) =>
+            const CreateListingScreen(), // For creating new listings
       ),
       GoRoute(
         path: '/listing/:id',
@@ -66,12 +68,19 @@ GoRouter _createRouter(AuthProvider authProvider) {
         path: '/listing/:id/edit',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return CreateListingScreen(listingId: id); // For editing existing listings
+          return CreateListingScreen(
+              listingId: id); // For editing existing listings
         },
       ),
       GoRoute(
-        path: '/my-posts',
+        path: '/my-posts', // Changed from /my-listings
+        name: 'my-listings', // Keep name for potential internal references
         builder: (context, state) => const MyListingsScreen(),
+      ),
+      GoRoute(
+        // Add route for AllCategoriesScreen
+        path: '/categories',
+        builder: (context, state) => const AllCategoriesScreen(),
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
@@ -84,10 +93,12 @@ GoRouter _createRouter(AuthProvider authProvider) {
           protectedRoutes.any((route) => currentLocation == route);
 
       // Check for edit route specifically as it contains a parameter
-      final bool isTryingToAccessEditRoute = RegExp(r'^/listing/.+/edit$').hasMatch(currentLocation);
+      final bool isTryingToAccessEditRoute =
+          RegExp(r'^/listing/.+/edit$').hasMatch(currentLocation);
 
       // If user is not logged in and trying to access a protected route (create, my-posts, or edit), redirect to /auth
-      if (!loggedIn && (isTryingToAccessProtectedRoute || isTryingToAccessEditRoute)) {
+      if (!loggedIn &&
+          (isTryingToAccessProtectedRoute || isTryingToAccessEditRoute)) {
         return '/auth';
       }
 
