@@ -25,6 +25,7 @@ dependencies:
   google_fonts: ^6.1.0
   image: ^4.1.3
   share_plus: ^9.0.0 # Added for sharing functionality
+  google_maps_flutter: ^2.6.1 # Added for Google Maps integration
 
 dev_dependencies:
   flutter_test:

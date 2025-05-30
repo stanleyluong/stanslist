@@ -3,6 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// Add these imports for web map display
+// import 'dart:ui' as ui; // Keep for other UI elements if needed, or remove if not used elsewhere
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web; // Import for platformViewRegistry on web
+
 import '../models/category.dart';
 import '../models/listing.dart';
 import '../providers/listings_provider.dart';
@@ -25,6 +31,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   int _selectedImageIndex = 0;
   final PageController _pageController = PageController();
   bool _isFetchingListing = false; // To prevent multiple fetches
+
+  // Access the API key passed via --dart-define
+  static const String _googleMapsApiKey = String.fromEnvironment(
+    'GOOGLE_MAPS_API_KEY',
+    defaultValue: '', // Ensure this is an empty string
+  );
 
   @override
   void initState() {
@@ -194,6 +206,35 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 ),
                 const SizedBox(height: 10),
                 _buildCategorySpecificDetails(context, listing),
+                const Divider(height: 30),
+              ],
+
+              // Location Map
+              if (listing.location.isNotEmpty) ...[
+                Text(
+                  'Location',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 250, // Adjust height as needed
+                  width: double.infinity,
+                  child: _buildMapView(listing.location),
+                ),
+                const SizedBox(height: 10), // Add some space before the button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _launchDirections(listing.location),
+                    icon: const Icon(Icons.directions),
+                    label: const Text('Get Directions'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
                 const Divider(height: 30),
               ],
 
@@ -602,6 +643,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     );
   }
 
+  // Helper to launch email
   Future<void> _launchEmail(String email) async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
@@ -613,13 +655,50 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
   }
 
-  Future<void> _launchPhone(String phone) async {
+  // Helper to launch phone
+  Future<void> _launchPhone(String phoneNumber) async {
     final Uri phoneUri = Uri(
       scheme: 'tel',
-      path: phone,
+      path: phoneNumber,
     );
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     }
+  }
+
+  // Helper to launch directions in Google Maps
+  Future<void> _launchDirections(String locationQuery) async {
+    final Uri mapsUri = Uri.https('www.google.com', '/maps/search/', {
+      'api': '1',
+      'query': locationQuery,
+    });
+    if (await canLaunchUrl(mapsUri)) {
+      await launchUrl(mapsUri);
+    } else {
+      // Handle the error or show a message to the user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open map for directions to "$locationQuery"'),
+          ),
+        );
+      }
+    }
+  }
+
+  // Widget to build the map view for web
+  Widget _buildMapView(String locationQuery) { // Remove apiKey parameter
+    final String iframeId = 'map-iframe-${widget.listingId}';
+    // Use ui_web.platformViewRegistry
+    ui_web.platformViewRegistry.registerViewFactory(
+      iframeId,
+      (int viewId) => html.IFrameElement()
+        ..width = '100%'
+        ..height = '100%'
+        // Use the compile-time variable _googleMapsApiKey here
+        ..src = 'https://www.google.com/maps/embed/v1/place?key=$_googleMapsApiKey&q=${Uri.encodeComponent(locationQuery)}'
+        ..style.border = 'none',
+    );
+    return HtmlElementView(viewType: iframeId);
   }
 }
