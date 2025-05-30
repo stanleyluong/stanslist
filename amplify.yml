@@ -3,10 +3,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        # Install Flutter SDK
-        - apt-get update -y
-        - apt-get install -y curl git unzip libgconf-2-4 gdb libstdc++6 libglu1-mesa fonts-droid-fallback lib32stdc++6 python3
-        - git clone https://github.com/flutter/flutter.git -b 3.22.0 --depth 1 # Updated Flutter version
+        # Install Flutter SDK dependencies using yum for Amazon Linux
+        - yum update -y
+        - yum install -y curl git unzip xz zip mesa-libGLU GConf2 python3 # Adjusted packages for yum
+        - git clone https://github.com/flutter/flutter.git -b 3.22.0 --depth 1 # Flutter version
         - export PATH="$PATH:`pwd`/flutter/bin"
         - flutter doctor -v # Verify Flutter installation
         - flutter clean
