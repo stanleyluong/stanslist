@@ -29,10 +29,13 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2224%22%20height=%2224%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22currentColor%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%20class=%22lucide%20lucide-store-icon%20lucide-store%22><path%20d=%22m2%207%204.41-4.41A2%202%200%200%201%207.83%202h8.34a2%202%200%200%201%201.42.59L22%207%22/><path%20d=%22M4%2012v8a2%202%200%200%200%202%202h12a2%202%200%200%200%202-2v-8%22/><path%20d=%22M15%2022v-4a2%202%200%200%200-2-2h-2a2%202%200%200%200-2%202v4%22/><path%20d=%22M2%207h20%22/><path%20d=%22M22%207v3a2%202%200%200%201-2%202a2.7%202.7%200%200%201-1.59-.63.7.7%200%200%200-.82%200A2.7%202.7%200%200%201%2016%2012a2.7%202.7%200%200%201-1.59-.63.7.7%200%200%200-.82%200A2.7%202.7%200%200%201%2012%2012a2.7%202.7%200%200%201-1.59-.63.7.7%200%200%200-.82%200A2.7%202.7%200%200%201%208%2012a2.7%202.7%200%200%201-1.59-.63.7.7%200%200%200-.82%200A2.7%202.7%200%200%201%204%2012a2%202%200%200%201-2-2V7%22/></svg>">
 
   <title>Stan's List - Local Classifieds Marketplace</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Google Identity Services (GIS) client library -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <script>
     // The value below is injected by flutter build, do not touch.
@@ -43,9 +46,11 @@
 </head>
 <body>
   <script>
+    {{flutter_build_config}}
+
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
+      _flutter.loader.load({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
         },

@@ -1,14 +1,31 @@
 import 'dart:async'; // Import for StreamSubscription
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart'
+    show kIsWeb; // Added for platform check
 import 'package:flutter/material.dart';
-// Import google_sign_in if you plan to use it, after adding the dependency
-// import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  // final GoogleSignIn _googleSignIn = GoogleSignIn(); // Uncomment if using Google Sign-In
+
+  // This is the Web Client ID from your Google Cloud Platform OAuth 2.0 credentials.
+  // Used for Google Sign-In on Web via the `clientId` parameter.
+  // Also used as `serverClientId` for Google Sign-In on mobile platforms
+  // to request an ID token that Firebase can verify.
+  static const String _googleOAuthWebClientId =
+      "441136828732-8ll9m1auejil9uv1q06hvpjedmjgodo2.apps.googleusercontent.com";
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    // For web: Pass the OAuth Web Client ID directly.
+    clientId: kIsWeb ? _googleOAuthWebClientId : null,
+    // For mobile (Android/iOS): This is the Web Client ID from your Firebase project's
+    // connected Google Cloud OAuth 2.0 credential. It's used to obtain an ID token for Firebase.
+    // For web: serverClientId must be null.
+    serverClientId: kIsWeb ? null : _googleOAuthWebClientId,
+  );
   StreamSubscription<User?>? _authStateSubscription;
+  StreamSubscription<GoogleSignInAccount?>? _googleSignInSubscription; // Added
 
   User? _currentUser;
 
@@ -18,11 +35,29 @@ class AuthProvider with ChangeNotifier {
       _currentUser = user;
       notifyListeners();
     });
+
+    // Listen to Google Sign-In changes
+    _googleSignInSubscription = _googleSignIn.onCurrentUserChanged
+        .listen((GoogleSignInAccount? account) async {
+      if (account != null) {
+        // User signed in with Google, now exchange for Firebase credential
+        try {
+          await _performFirebaseSignInWithGoogle(account);
+          // Firebase auth state will be updated by _auth.authStateChanges()
+        } catch (e) {
+          // Error during Firebase sign-in with Google account
+          // This error is not directly propagated to the UI that initiated signInWithGoogle()
+          // Consider implementing a mechanism to expose this error if needed (e.g., an error stream or state in AuthProvider)
+          print('Error signing into Firebase with Google account: $e');
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _authStateSubscription?.cancel();
+    _googleSignInSubscription?.cancel(); // Added
     super.dispose();
   }
 
@@ -63,42 +98,57 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Google Sign In - Placeholder, will require google_sign_in package and setup
-  Future<UserCredential?> signInWithGoogle() async {
+  // Renamed from signInWithGoogle and modified to take GoogleSignInAccount
+  Future<UserCredential?> _performFirebaseSignInWithGoogle(
+      GoogleSignInAccount googleUser) async {
     try {
-      // Trigger the authentication flow
-      // final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      // if (googleUser == null) {
-      //   // The user canceled the sign-in
-      //   return null;
-      // }
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      // // Obtain the auth details from the request
-      // final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      print('AuthProvider: GoogleSignInAuthentication idToken: ${googleAuth.idToken}');
+      print('AuthProvider: GoogleSignInAuthentication accessToken: ${googleAuth.accessToken}');
 
-      // // Create a new credential
-      // final AuthCredential credential = GoogleAuthProvider.credential(
-      //   accessToken: googleAuth.accessToken,
-      //   idToken: googleAuth.idToken,
-      // );
+      // Create a new credential
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken, // This might be null for web, idToken is key
+        idToken: googleAuth.idToken, // This is crucial for Firebase
+      );
 
-      // // Sign in to Firebase with the Google [UserCredential]
-      // UserCredential userCredential = await _auth.signInWithCredential(credential);
-      // notifyListeners();
-      // return userCredential;
-      print(
-          'Google Sign-In not fully implemented yet. Requires google_sign_in package.');
-      throw UnimplementedError('Google Sign-In not fully implemented yet.');
+      // Sign in to Firebase with the Google [UserCredential]
+      UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      // notifyListeners(); // Already handled by authStateChanges listener
+      return userCredential;
     } catch (e) {
-      print('Failed to sign in with Google: $e');
-      throw e; // Re-throw to be caught by UI
+      print('Failed to sign in to Firebase with Google: $e');
+      throw e; // Re-throw to be caught by the listener's try-catch or if called directly
+    }
+  }
+
+  // New method to initiate Google Sign-In flow
+  // AuthScreen will call this method.
+  Future<void> signInWithGoogle() async {
+    try {
+      // Trigger the authentication flow.
+      // The onCurrentUserChanged listener will handle the GoogleSignInAccount.
+      await _googleSignIn.signIn();
+    } catch (e) {
+      print('Error initiating Google Sign-In: $e');
+      // This error will be caught by the try-catch in AuthScreen
+      throw e;
     }
   }
 
   // Sign Out
   Future<void> signOut() async {
-    // await _googleSignIn.signOut(); // Uncomment if using Google Sign-In
+    print('[AuthProvider] Signing out...');
+    // Order is important: sign out from Google first, then Firebase.
+    await _googleSignIn.signOut();
     await _auth.signOut();
-    // notifyListeners(); // Already handled by authStateChanges listener
+    print('[AuthProvider] Sign out complete.');
+    // notifyListeners(); // Already handled by _auth.authStateChanges listener
   }
 }
+
+// Removed NavigationService as it's no longer needed with the simplified approach

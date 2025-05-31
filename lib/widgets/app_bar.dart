@@ -1,17 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider; // Hide Firebase's AuthProvider
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 
 class StansListAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String? titleText; // Add this line
+  final String? titleText;
 
   const StansListAppBar({
     super.key,
-    this.titleText, // Add this line
+    this.titleText,
   });
 
   @override
@@ -19,17 +20,36 @@ class StansListAppBar extends StatelessWidget implements PreferredSizeWidget {
     final authProvider = context.watch<AuthProvider>();
     final User? currentUser = authProvider.currentUser;
     final screenWidth = MediaQuery.of(context).size.width;
-    final bool showLabels = screenWidth > 700; // Breakpoint for showing labels
+    final bool showLabels = screenWidth > 700;
 
     // Debug print to check currentUser status in the console
     print(
         '[StansListAppBar] Building. currentUser UID: ${currentUser?.uid ?? "null"}');
 
+    const String marketplaceIconSvg =
+        '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/></svg>''';
+
     return AppBar(
       title: InkWell(
-        // Wrap the Text widget in an InkWell
-        onTap: () => context.go('/'), // Add onTap to navigate to homepage
-        child: Text(titleText ?? 'Stan\'s List'), // Modify this line
+        onTap: () => context.go('/'),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SvgPicture.string(
+              marketplaceIconSvg,
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                Theme.of(context).appBarTheme.titleTextStyle?.color ??
+                    Colors.white,
+                BlendMode.srcIn,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(titleText ??
+                'Stan\'s List'), // Corrected escaping for Stan's List
+          ],
+        ),
       ),
       actions: [
         TextButton.icon(

@@ -26,6 +26,8 @@ dependencies:
   image: ^4.1.3
   share_plus: ^9.0.0 # Added for sharing functionality
   google_maps_flutter: ^2.6.1 # Added for Google Maps integration
+  google_sign_in: ^6.2.1 # Added for Firebase Google authentication
+  flutter_svg: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -34,5 +36,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/ # Keep only the top-level assets directory
-    - .env
+    - assets/
+    - .env # Ensure this file exists at the root of your project
