@@ -81,7 +81,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 if (_isLoading) const CircularProgressIndicator(),
                 if (!_isLoading) ...[
                   OutlinedButton.icon(
-                    icon: Image.asset( // Changed from SvgPicture.asset
+                    icon: Image.asset(
+                      // Changed from SvgPicture.asset
                       'assets/google-icon-2048x2048-czn3g8x8.png', // Updated path
                       height: 24.0, // Adjust size as needed
                     ),
