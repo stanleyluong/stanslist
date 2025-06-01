@@ -27,7 +27,7 @@ dependencies:
   image: ^4.1.3
   share_plus: ^11.0.0 # Updated from ^9.0.0
   google_maps_flutter: ^2.6.1
-  google_sign_in: ^6.3.0 # Keeping this for now, pub get will resolve best version
+  google_sign_in: ^6.2.2 # Downgraded to resolve SDK conflict with Amplify
   flutter_svg: ^2.1.0
   flutter_dotenv: ^5.2.1
 
