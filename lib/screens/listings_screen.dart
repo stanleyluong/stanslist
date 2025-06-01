@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import '../providers/listings_provider.dart';
 import '../widgets/app_bar.dart';
@@ -9,11 +9,11 @@ import '../widgets/listing_card.dart';
 import '../widgets/search_bar.dart';
 import '../widgets/side_panel.dart';
 
-class ListingsScreen extends StatelessWidget {
+class ListingsScreen extends ConsumerWidget {
   const ListingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Determine if we should show the side panel
     final screenWidth = MediaQuery.of(context).size.width;
     final bool showSidePanel = screenWidth >= 768; // Desktop threshold
@@ -52,8 +52,11 @@ class ListingsScreen extends StatelessWidget {
 
                 // Listings Grid
                 Expanded(
-                  child: Consumer<ListingsProvider>(
-                    builder: (context, provider, child) {
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final provider = ref.watch(listingsProvider);
+                      final listingsNotifier = ref.read(listingsProvider.notifier);
+
                       if (provider.isLoading) {
                         return const Center(
                           child: CircularProgressIndicator(),
@@ -94,7 +97,7 @@ class ListingsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 24),
                               ElevatedButton(
-                                onPressed: () => provider.clearFilters(),
+                                onPressed: () => listingsNotifier.clearFilters(),
                                 child: const Text('Clear Filters'),
                               ),
                             ],

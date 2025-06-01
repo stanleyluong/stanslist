@@ -31,21 +31,29 @@ class StansListAppBar extends ConsumerWidget implements PreferredSizeWidget {
       title: InkWell(
         onTap: () => context.go('/'),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             SvgPicture.string(
               marketplaceIconSvg,
-              height: 24,
-              width: 24,
+              height: 22, // Reduced icon size
+              width: 22, // Reduced icon size
               colorFilter: ColorFilter.mode(
                 Theme.of(context).appBarTheme.titleTextStyle?.color ??
                     Colors.white,
                 BlendMode.srcIn,
               ),
             ),
-            const SizedBox(width: 8),
-            Text(titleText ??
-                "Stan's List"), // Using double quotes for Stan's List
+            if (titleText != null || screenWidth > 420) // Slightly increased breakpoint
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 6.0), // Reduced padding
+                  child: Text(
+                    titleText ?? "Stan's List",
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: TextStyle(fontSize: Theme.of(context).textTheme.titleLarge?.fontSize), // Ensure consistent font size
+                  ),
+                ),
+              ),
           ],
         ),
       ),

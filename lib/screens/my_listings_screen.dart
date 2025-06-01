@@ -6,7 +6,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:stanslist/models/listing.dart';
 import 'package:stanslist/providers/auth_provider.dart';
 import 'package:stanslist/providers/listings_provider.dart';
+import 'package:stanslist/widgets/app_bar.dart'; // Import StansListAppBar
 import 'package:stanslist/widgets/delete_confirmation_dialog.dart';
+import 'package:stanslist/widgets/side_panel.dart'; // Import SidePanel
 
 class MyListingsScreen extends ConsumerStatefulWidget {
   const MyListingsScreen({super.key});
@@ -24,11 +26,14 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen> {
     super.initState();
     // Delaying the initial load until after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = ref.read(authProvider).user;
-      if (user != null && _loadedListingsForUserId != user.uid) {
-        _loadUserListings(user.uid);
-      } else if (user == null && _loadedListingsForUserId != null) {
-        _loadUserListings(null); // Clear listings if user logged out
+      // Check if the widget is still in the tree (mounted) before using ref.
+      if (mounted) {
+        final user = ref.read(authProvider).user;
+        if (user != null && _loadedListingsForUserId != user.uid) {
+          _loadUserListings(user.uid);
+        } else if (user == null && _loadedListingsForUserId != null) {
+          _loadUserListings(null); // Clear listings if user logged out
+        }
       }
     });
   }
@@ -68,12 +73,21 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentUserId = authState.user?.uid;
+    final screenWidth = MediaQuery.of(context).size.width; // Get screen width
+    final bool showSidePanel = screenWidth >= 768; // Determine if side panel should be shown
 
     if (currentUserId == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My Listings')),
-        body: const Center(
-          child: Text('Please log in to see your listings.'),
+        appBar: const StansListAppBar(), // Use StansListAppBar
+        body: Row( // Added Row for potential side panel
+          children: [
+            if (showSidePanel) const SidePanel(), // Show side panel if applicable
+            const Expanded(
+              child: Center(
+                child: Text('Please log in to see your listings.'),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -88,70 +102,68 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Listings'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.go('/create-listing'),
-            tooltip: 'Create New Listing',
+      appBar: const StansListAppBar(), // Use StansListAppBar
+      body: Row( // Wrap body content with Row
+        children: [
+          if (showSidePanel) const SidePanel(), // Add SidePanel here
+          Expanded( // Wrap FutureBuilder with Expanded
+            child: FutureBuilder<void>(
+              future: _initialLoadListingsFuture,
+              builder: (context, snapshot) {
+                // Use _loadedListingsForUserId to ensure we are showing data for the correct user,
+                // especially during transitions (login/logout).
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    (_initialLoadListingsFuture != null &&
+                        _loadedListingsForUserId == currentUserId)) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                      child: Text(
+                          'Error loading listings: ${snapshot.error}\nSource: FutureBuilder'));
+                }
+
+                final listingsNotifier = ref.watch(listingsProvider);
+                // Get listings specifically for the current user from the provider's cache.
+                final listings =
+                    listingsNotifier.getCurrentlyLoadedUserListings(currentUserId);
+
+                if (listings.isEmpty &&
+                    snapshot.connectionState == ConnectionState.done &&
+                    !snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('You haven\'t posted any listings yet.'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => context.go('/create-listing'),
+                          child: const Text('Create Your First Listing'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Display listings only if they belong to the currently active user for whom they were loaded.
+                if (listings.isNotEmpty &&
+                    _loadedListingsForUserId == currentUserId) {
+                  return ListView.builder(
+                    itemCount: listings.length,
+                    itemBuilder: (context, index) {
+                      final listing = listings[index];
+                      return _MyListingCard(
+                          listing: listing, currentUserId: currentUserId);
+                    },
+                  );
+                }
+                // Fallback or if _loadedListingsForUserId != currentUserId (e.g. user just logged out, waiting for UI to update)
+                return const Center(child: CircularProgressIndicator());
+              },
+            ),
           ),
         ],
-      ),
-      body: FutureBuilder<void>(
-        future: _initialLoadListingsFuture,
-        builder: (context, snapshot) {
-          // Use _loadedListingsForUserId to ensure we are showing data for the correct user,
-          // especially during transitions (login/logout).
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              (_initialLoadListingsFuture != null &&
-                  _loadedListingsForUserId == currentUserId)) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-                child: Text(
-                    'Error loading listings: ${snapshot.error}\nSource: FutureBuilder'));
-          }
-
-          final listingsNotifier = ref.watch(listingsProvider);
-          // Get listings specifically for the current user from the provider's cache.
-          final listings =
-              listingsNotifier.getCurrentlyLoadedUserListings(currentUserId);
-
-          if (listings.isEmpty &&
-              snapshot.connectionState == ConnectionState.done &&
-              !snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('You haven\'t posted any listings yet.'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.go('/create-listing'),
-                    child: const Text('Create Your First Listing'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Display listings only if they belong to the currently active user for whom they were loaded.
-          if (listings.isNotEmpty &&
-              _loadedListingsForUserId == currentUserId) {
-            return ListView.builder(
-              itemCount: listings.length,
-              itemBuilder: (context, index) {
-                final listing = listings[index];
-                return _MyListingCard(
-                    listing: listing, currentUserId: currentUserId);
-              },
-            );
-          }
-          // Fallback or if _loadedListingsForUserId != currentUserId (e.g. user just logged out, waiting for UI to update)
-          return const Center(child: CircularProgressIndicator());
-        },
       ),
     );
   }

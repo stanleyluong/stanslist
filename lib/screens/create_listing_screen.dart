@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added Riverpod
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart'; // Removed provider
 import 'package:uuid/uuid.dart';
 
 import '../models/category.dart' as models;
@@ -15,16 +16,16 @@ import '../providers/listings_provider.dart';
 import '../widgets/app_bar.dart'; // Corrected import for StansListAppBar
 import '../widgets/listing_form_panel.dart'; // Import the new form panel
 
-class CreateListingScreen extends StatefulWidget {
+class CreateListingScreen extends ConsumerStatefulWidget { // Changed to ConsumerStatefulWidget
   final String? listingId; // Add optional listingId parameter
 
   const CreateListingScreen({super.key, this.listingId}); // Update constructor
 
   @override
-  State<CreateListingScreen> createState() => _CreateListingScreenState();
+  ConsumerState<CreateListingScreen> createState() => _CreateListingScreenState(); // Changed to ConsumerState
 }
 
-class _CreateListingScreenState extends State<CreateListingScreen> {
+class _CreateListingScreenState extends ConsumerState<CreateListingScreen> { // Changed to extend ConsumerState
   final _formKey = GlobalKey<FormState>();
 
   final Map<String, TextEditingController> _controllers = {
@@ -67,8 +68,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final currentUser = authProvider.user;
+    // final authProvider = Provider.of<AuthProvider>(context, listen: false); // Removed provider
+    final authState = ref.watch(authProvider); // Changed to ref.watch
+    final currentUser = authState.user; // Adjusted to access user from AuthState
     if (widget.listingId == null && // Only auto-populate for new listings
         currentUser?.email != null &&
         _controllers['email']!.text.isEmpty) {
@@ -85,8 +87,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     }
 
     try {
-      final listing = Provider.of<ListingsProvider>(context, listen: false)
-          .getListingById(widget.listingId!);
+      // final listing = Provider.of<ListingsProvider>(context, listen: false) // Removed provider
+      //     .getListingById(widget.listingId!); // Removed provider
+      final listing = ref.read(listingsProvider).getListingById(widget.listingId!); // Changed to ref.read
       if (listing != null) {
         _editingListing = listing;
         _controllers['title']!.text = listing.title;
@@ -300,9 +303,10 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       return;
     }
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    // final currentUser = authProvider.currentUser;
-    final currentUser = authProvider.user;
+    // final authProvider = Provider.of<AuthProvider>(context, listen: false); // Removed provider
+    // final currentUser = authProvider.currentUser; // Removed provider
+    final authState = ref.read(authProvider); // Changed to ref.read
+    final currentUser = authState.user; // Adjusted to access user from AuthState
 
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -364,13 +368,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     );
 
     try {
-      final listingsProvider =
-          Provider.of<ListingsProvider>(context, listen: false);
+      // final listingsProvider = // Removed provider
+      //     Provider.of<ListingsProvider>(context, listen: false); // Removed provider
+      final listingsNotifier = ref.read(listingsProvider.notifier); // Changed to ref.read for notifier
       if (_editingListing != null) {
         // If _editingListing is not null, then listingToSubmit.id is also not null.
-        // The analyzer suggests removing '!' as it's redundant.
-        await listingsProvider.updateListing(
-            listingToSubmit.id, listingToSubmit);
+        await listingsNotifier.updateListing( // Changed to use notifier
+            listingToSubmit.id, listingToSubmit); // Removed redundant '!'
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -381,7 +385,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           context.go('/my-posts');
         }
       } else {
-        await listingsProvider.addListing(listingToSubmit);
+        await listingsNotifier.addListing(listingToSubmit); // Changed to use notifier
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

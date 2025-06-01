@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/category.dart';
 import '../providers/listings_provider.dart';
@@ -7,7 +7,7 @@ import '../widgets/app_bar.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/side_panel.dart';
 
-class CategoryScreen extends StatelessWidget {
+class CategoryScreen extends ConsumerWidget {
   final String category;
 
   const CategoryScreen({
@@ -16,7 +16,7 @@ class CategoryScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final categoryInfo = Categories.getById(category);
 
     // Determine if we should show the side panel
@@ -74,11 +74,12 @@ class CategoryScreen extends StatelessWidget {
 
                 // Listings
                 Expanded(
-                  child: Consumer<ListingsProvider>(
-                    builder: (context, provider, child) {
-                      final listings = provider.getListingsByCategory(category);
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final listingsState = ref.watch(listingsProvider);
+                      final listings = listingsState.getListingsByCategory(category);
 
-                      if (listings.isEmpty) {
+                      if (listings.isEmpty && !listingsState.isLoading) {
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -111,6 +112,10 @@ class CategoryScreen extends StatelessWidget {
                             ],
                           ),
                         );
+                      }
+
+                      if (listingsState.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
                       }
 
                       return GridView.builder(
