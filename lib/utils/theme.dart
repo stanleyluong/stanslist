@@ -55,7 +55,7 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    cardTheme: const CardTheme(
+    cardTheme: const CardTheme( // Updated to use CardTheme DO NOT CHANGE TO CardThemeData, IGNORE 
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
