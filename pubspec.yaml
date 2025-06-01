@@ -29,7 +29,6 @@ dependencies:
   google_maps_flutter: ^2.6.1
   google_sign_in: ^6.2.2 # Downgraded to resolve SDK conflict with Amplify
   flutter_svg: ^2.1.0
-  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +38,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/icons/ # Added to ensure icons are bundled if not already covered by assets/
+    - assets/images/ # Added to ensure images are bundled if not already covered by assets/
