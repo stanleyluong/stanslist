@@ -1,13 +1,15 @@
 // Add these imports for web map display
 // import 'dart:ui' as ui; // Keep for other UI elements if needed, or remove if not used elsewhere
 // ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-import 'dart:ui_web' as ui_web; // Import for platformViewRegistry on web
+// import 'dart:html' as html; // Removed deprecated import
+// import 'dart:ui_web' as ui_web; // Removed deprecated import, not needed for GoogleMap widget
 
+import 'package:flutter/foundation.dart' show kIsWeb, Factory; // Ensure Factory is imported
+import 'package:flutter/gestures.dart'; // For EagerGestureRecognizer
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-// import 'package:provider/provider.dart'; // Removed provider
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/category.dart';
@@ -35,6 +37,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
   int _selectedImageIndex = 0;
   final PageController _pageController = PageController();
   bool _isFetchingListing = false; // To prevent multiple fetches
+  // GoogleMapController? _mapController; // Commented out as it's unused for now
 
   // Access the API key passed via --dart-define
   static const String _googleMapsApiKey = String.fromEnvironment(
@@ -359,11 +362,18 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                                         fit: BoxFit.contain,
                                         errorBuilder:
                                             (context, error, stackTrace) {
-                                          return const Center(
-                                            child: Icon(
-                                              Icons.broken_image,
-                                              size: 64,
-                                              color: Colors.grey,
+                                          // Try to load as asset if network fails, or vice-versa (basic fallback)
+                                          // This is a simple fallback, a more robust solution might be needed
+                                          final isAsset = images[index].startsWith('assets/');
+                                          return Image(
+                                            image: isAsset ? NetworkImage(images[index].replaceFirst('assets/', '')) : AssetImage('assets/' + images[index]) as ImageProvider,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (ctx, err, st) => const Center(
+                                              child: Icon(
+                                                Icons.broken_image,
+                                                size: 64,
+                                                color: Colors.grey,
+                                              ),
                                             ),
                                           );
                                         },
@@ -419,8 +429,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
-                                            color:
-                                                Colors.black.withOpacity(0.1),
+                                            color: const Color(0x1A000000), // Replaced Colors.black.withOpacity(0.1)
                                             spreadRadius: 0,
                                             blurRadius: 3,
                                             offset: const Offset(0, 1),
@@ -661,16 +670,46 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
   }
 
   Widget _buildMapView(String locationQuery) {
-    final String iframeId = 'map-iframe-${widget.listingId}';
-    ui_web.platformViewRegistry.registerViewFactory(
-      iframeId,
-      (int viewId) => html.IFrameElement()
-        ..width = '100%'
-        ..height = '100%'
-        ..src =
-            'https://www.google.com/maps/embed/v1/place?key=$_googleMapsApiKey&q=${Uri.encodeComponent(locationQuery)}'
-        ..style.border = 'none',
+    if (kIsWeb && _googleMapsApiKey.isEmpty) {
+      return const Center(
+          child: Text(
+              'Google Maps API Key not configured. Map cannot be displayed.'));
+    }
+    
+    LatLng targetLocation = const LatLng(37.7749, -122.4194); // Default (e.g., San Francisco)
+
+    final parts = locationQuery.split(',');
+    if (parts.length == 2) {
+      final lat = double.tryParse(parts[0].trim());
+      final lng = double.tryParse(parts[1].trim());
+      if (lat != null && lng != null) {
+        targetLocation = LatLng(lat, lng);
+      }
+    } else {
+      // Placeholder for actual geocoding if locationQuery is an address string
+      print(
+          "Geocoding needed for location: $locationQuery. Using default/parsed coordinates for now.");
+    }
+
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: targetLocation,
+        zoom: 14.0,
+      ),
+      markers: {
+        Marker(
+          markerId: const MarkerId('listingLocation'),
+          position: targetLocation,
+          infoWindow: InfoWindow(title: locationQuery.split(',').first), // Show part of the location query
+        ),
+      },
+      onMapCreated: (GoogleMapController controller) {
+        // _mapController = controller; // Commented out as it's unused for now
+      },
+      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+        if (kIsWeb)
+          Factory<EagerGestureRecognizer>(() => EagerGestureRecognizer()),
+      },
     );
-    return HtmlElementView(viewType: iframeId);
   }
 }

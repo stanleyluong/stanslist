@@ -182,8 +182,14 @@ class _MyListingCard extends ConsumerWidget {
     final String textToShare =
         'Check out this listing: ${listing.title} for ${currencyFormatter.format(listing.price)}\n'
         'View it here: ${Uri.base.origin}/#/listing/${listing.id}';
-    await Share.share(textToShare,
-        subject: 'Check out this listing on Stan\'s List!');
+    
+    // Updated to use SharePlus.instance.share(ShareParams(...)) as per documentation for v11.0.0
+    await SharePlus.instance.share(
+      ShareParams(
+        text: textToShare,
+        subject: 'Check out this listing on Stan\'s List!'
+      )
+    );
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Listing listing) {

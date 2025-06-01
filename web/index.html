@@ -34,19 +34,22 @@
   <title>Stan's List - Local Classifieds Marketplace</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Google Maps JavaScript API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places" async defer></script>
+
   <!-- Google Identity Services (GIS) client library -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = {{flutter_service_worker_version}};
+    const serviceWorkerVersion = {{ '''flutter_service_worker_version''' }};
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
 <body>
   <script>
-    {{flutter_build_config}}
+    {{ '''flutter_build_config''' }}
 
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
