@@ -55,9 +55,8 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    cardTheme: const CardTheme(
-      // Reverted to CardTheme based on successful Amplify deployment history,
-      // even if it shows a local analyzer warning.
+    cardTheme: const CardThemeData(
+      // Changed back to CardThemeData to fix compilation error
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
