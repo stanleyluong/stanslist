@@ -41,3 +41,5 @@ coverage/
 
 # Environment variables
 .env
+run_web.sh
+run_dev.sh

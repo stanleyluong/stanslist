@@ -3,7 +3,6 @@ import 'dart:async'; // Import for StreamSubscription
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Add Riverpod import
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -24,9 +23,11 @@ class AuthProvider extends ChangeNotifier {
       : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
         _googleSignIn = googleSignIn ??
             GoogleSignIn(
-              // Use the .env variable name provided by the user
-              clientId: kIsWeb ? dotenv.env['GOOGLE_SIGN_IN_CLIENT_ID'] : null,
-              // serverClientId: !kIsWeb ? dotenv.env['ANDROID_OAUTH_CLIENT_ID'] : null, // Example for requesting idToken on Android
+              // Use dart-define values for both development and production
+              clientId: kIsWeb
+                  ? const String.fromEnvironment('GOOGLE_SIGN_IN_CLIENT_ID')
+                  : null,
+              // serverClientId: !kIsWeb ? const String.fromEnvironment('ANDROID_OAUTH_CLIENT_ID') : null, // For Android if needed
             ) {
     _firebaseAuth.authStateChanges().listen(_onAuthStateChanged);
     _googleSignIn.onCurrentUserChanged.listen(_onGoogleCurrentUserChanged);
