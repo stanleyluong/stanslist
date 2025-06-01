@@ -55,7 +55,8 @@ class ListingsScreen extends ConsumerWidget {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final provider = ref.watch(listingsProvider);
-                      final listingsNotifier = ref.read(listingsProvider.notifier);
+                      final listingsNotifier =
+                          ref.read(listingsProvider.notifier);
 
                       if (provider.isLoading) {
                         return const Center(
@@ -97,7 +98,8 @@ class ListingsScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 24),
                               ElevatedButton(
-                                onPressed: () => listingsNotifier.clearFilters(),
+                                onPressed: () =>
+                                    listingsNotifier.clearFilters(),
                                 child: const Text('Clear Filters'),
                               ),
                             ],

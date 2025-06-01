@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../providers/listings_provider.dart';
 import 'listing_card.dart';
 
@@ -33,15 +34,15 @@ class FeaturedListings extends ConsumerWidget {
               Text(
                 'No listings yet',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Be the first to post a listing!',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade500,
-                ),
+                      color: Colors.grey.shade500,
+                    ),
               ),
             ],
           ),

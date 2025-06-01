@@ -42,7 +42,8 @@ class StansListAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 BlendMode.srcIn,
               ),
             ),
-            if (titleText != null || screenWidth > 420) // Slightly increased breakpoint
+            if (titleText != null ||
+                screenWidth > 420) // Slightly increased breakpoint
               Flexible(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 6.0), // Reduced padding
@@ -50,7 +51,11 @@ class StansListAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     titleText ?? "Stan's List",
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
-                    style: TextStyle(fontSize: Theme.of(context).textTheme.titleLarge?.fontSize), // Ensure consistent font size
+                    style: TextStyle(
+                        fontSize: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.fontSize), // Ensure consistent font size
                   ),
                 ),
               ),

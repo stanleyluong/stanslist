@@ -77,7 +77,8 @@ class CategoryScreen extends ConsumerWidget {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final listingsState = ref.watch(listingsProvider);
-                      final listings = listingsState.getListingsByCategory(category);
+                      final listings =
+                          listingsState.getListingsByCategory(category);
 
                       if (listings.isEmpty && !listingsState.isLoading) {
                         return Center(

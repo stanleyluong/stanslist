@@ -74,14 +74,17 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen> {
     final authState = ref.watch(authProvider);
     final currentUserId = authState.user?.uid;
     final screenWidth = MediaQuery.of(context).size.width; // Get screen width
-    final bool showSidePanel = screenWidth >= 768; // Determine if side panel should be shown
+    final bool showSidePanel =
+        screenWidth >= 768; // Determine if side panel should be shown
 
     if (currentUserId == null) {
       return Scaffold(
         appBar: const StansListAppBar(), // Use StansListAppBar
-        body: Row( // Added Row for potential side panel
+        body: Row(
+          // Added Row for potential side panel
           children: [
-            if (showSidePanel) const SidePanel(), // Show side panel if applicable
+            if (showSidePanel)
+              const SidePanel(), // Show side panel if applicable
             const Expanded(
               child: Center(
                 child: Text('Please log in to see your listings.'),
@@ -103,10 +106,12 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen> {
 
     return Scaffold(
       appBar: const StansListAppBar(), // Use StansListAppBar
-      body: Row( // Wrap body content with Row
+      body: Row(
+        // Wrap body content with Row
         children: [
           if (showSidePanel) const SidePanel(), // Add SidePanel here
-          Expanded( // Wrap FutureBuilder with Expanded
+          Expanded(
+            // Wrap FutureBuilder with Expanded
             child: FutureBuilder<void>(
               future: _initialLoadListingsFuture,
               builder: (context, snapshot) {
@@ -125,8 +130,8 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen> {
 
                 final listingsNotifier = ref.watch(listingsProvider);
                 // Get listings specifically for the current user from the provider's cache.
-                final listings =
-                    listingsNotifier.getCurrentlyLoadedUserListings(currentUserId);
+                final listings = listingsNotifier
+                    .getCurrentlyLoadedUserListings(currentUserId);
 
                 if (listings.isEmpty &&
                     snapshot.connectionState == ConnectionState.done &&
@@ -182,14 +187,10 @@ class _MyListingCard extends ConsumerWidget {
     final String textToShare =
         'Check out this listing: ${listing.title} for ${currencyFormatter.format(listing.price)}\n'
         'View it here: ${Uri.base.origin}/#/listing/${listing.id}';
-    
+
     // Updated to use SharePlus.instance.share(ShareParams(...)) as per documentation for v11.0.0
-    await SharePlus.instance.share(
-      ShareParams(
-        text: textToShare,
-        subject: 'Check out this listing on Stan\'s List!'
-      )
-    );
+    await SharePlus.instance.share(ShareParams(
+        text: textToShare, subject: 'Check out this listing on Stan\'s List!'));
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Listing listing) {

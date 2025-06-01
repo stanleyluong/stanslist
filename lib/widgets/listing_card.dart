@@ -56,7 +56,8 @@ class ListingCard extends StatelessWidget {
             Flexible(
               child: Padding(
                 padding: const EdgeInsets.all(8),
-                child: SingleChildScrollView( // Added SingleChildScrollView
+                child: SingleChildScrollView(
+                  // Added SingleChildScrollView
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min, // Keep content compact
@@ -67,10 +68,11 @@ class ListingCard extends StatelessWidget {
                                 symbol: '\$',
                                 decimalDigits: 0) // Corrected currency symbol
                             .format(listing.price),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 4), // Spacing after price
 
@@ -78,10 +80,11 @@ class ListingCard extends StatelessWidget {
                       Flexible(
                         child: Text(
                           listing.title,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                            ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -102,10 +105,12 @@ class ListingCard extends StatelessWidget {
                               // Using just location for now, like Facebook Marketplace
                               listing.location,
                               // '${listing.location} • ${DateFormat.yMMMd().format(listing.createdAt)}',
-                              style:
-                                  Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Colors.grey.shade600.withAlpha(200),
-                                      ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Colors.grey.shade600.withAlpha(200),
+                                  ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

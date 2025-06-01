@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/listings_provider.dart';
+
 import '../models/category.dart';
+import '../providers/listings_provider.dart';
 
 class FiltersBar extends ConsumerWidget {
   const FiltersBar({super.key});
@@ -17,7 +18,9 @@ class FiltersBar extends ConsumerWidget {
       children: [
         // Category Filter
         DropdownButton<String>(
-          value: provider.selectedCategory.isEmpty ? null : provider.selectedCategory,
+          value: provider.selectedCategory.isEmpty
+              ? null
+              : provider.selectedCategory,
           hint: const Text('All Categories'),
           items: [
             const DropdownMenuItem<String>(
@@ -63,8 +66,8 @@ class FiltersBar extends ConsumerWidget {
         ),
 
         // Clear Filters Button
-        if (provider.selectedCategory.isNotEmpty || 
-            provider.selectedLocation.isNotEmpty || 
+        if (provider.selectedCategory.isNotEmpty ||
+            provider.selectedLocation.isNotEmpty ||
             provider.searchQuery.isNotEmpty)
           OutlinedButton.icon(
             onPressed: () => listingsNotifier.clearFilters(),

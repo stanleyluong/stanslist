@@ -16,16 +16,19 @@ import '../providers/listings_provider.dart';
 import '../widgets/app_bar.dart'; // Corrected import for StansListAppBar
 import '../widgets/listing_form_panel.dart'; // Import the new form panel
 
-class CreateListingScreen extends ConsumerStatefulWidget { // Changed to ConsumerStatefulWidget
+class CreateListingScreen extends ConsumerStatefulWidget {
+  // Changed to ConsumerStatefulWidget
   final String? listingId; // Add optional listingId parameter
 
   const CreateListingScreen({super.key, this.listingId}); // Update constructor
 
   @override
-  ConsumerState<CreateListingScreen> createState() => _CreateListingScreenState(); // Changed to ConsumerState
+  ConsumerState<CreateListingScreen> createState() =>
+      _CreateListingScreenState(); // Changed to ConsumerState
 }
 
-class _CreateListingScreenState extends ConsumerState<CreateListingScreen> { // Changed to extend ConsumerState
+class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
+  // Changed to extend ConsumerState
   final _formKey = GlobalKey<FormState>();
 
   final Map<String, TextEditingController> _controllers = {
@@ -70,7 +73,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> { // 
     super.didChangeDependencies();
     // final authProvider = Provider.of<AuthProvider>(context, listen: false); // Removed provider
     final authState = ref.watch(authProvider); // Changed to ref.watch
-    final currentUser = authState.user; // Adjusted to access user from AuthState
+    final currentUser =
+        authState.user; // Adjusted to access user from AuthState
     if (widget.listingId == null && // Only auto-populate for new listings
         currentUser?.email != null &&
         _controllers['email']!.text.isEmpty) {
@@ -89,7 +93,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> { // 
     try {
       // final listing = Provider.of<ListingsProvider>(context, listen: false) // Removed provider
       //     .getListingById(widget.listingId!); // Removed provider
-      final listing = ref.read(listingsProvider).getListingById(widget.listingId!); // Changed to ref.read
+      final listing = ref
+          .read(listingsProvider)
+          .getListingById(widget.listingId!); // Changed to ref.read
       if (listing != null) {
         _editingListing = listing;
         _controllers['title']!.text = listing.title;
@@ -306,7 +312,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> { // 
     // final authProvider = Provider.of<AuthProvider>(context, listen: false); // Removed provider
     // final currentUser = authProvider.currentUser; // Removed provider
     final authState = ref.read(authProvider); // Changed to ref.read
-    final currentUser = authState.user; // Adjusted to access user from AuthState
+    final currentUser =
+        authState.user; // Adjusted to access user from AuthState
 
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -370,11 +377,14 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> { // 
     try {
       // final listingsProvider = // Removed provider
       //     Provider.of<ListingsProvider>(context, listen: false); // Removed provider
-      final listingsNotifier = ref.read(listingsProvider.notifier); // Changed to ref.read for notifier
+      final listingsNotifier = ref
+          .read(listingsProvider.notifier); // Changed to ref.read for notifier
       if (_editingListing != null) {
         // If _editingListing is not null, then listingToSubmit.id is also not null.
-        await listingsNotifier.updateListing( // Changed to use notifier
-            listingToSubmit.id, listingToSubmit); // Removed redundant '!'
+        await listingsNotifier.updateListing(
+            // Changed to use notifier
+            listingToSubmit.id,
+            listingToSubmit); // Removed redundant '!'
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -385,7 +395,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> { // 
           context.go('/my-posts');
         }
       } else {
-        await listingsNotifier.addListing(listingToSubmit); // Changed to use notifier
+        await listingsNotifier
+            .addListing(listingToSubmit); // Changed to use notifier
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

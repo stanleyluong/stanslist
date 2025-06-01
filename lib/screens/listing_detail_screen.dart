@@ -4,7 +4,8 @@
 // import 'dart:html' as html; // Removed deprecated import
 // import 'dart:ui_web' as ui_web; // Removed deprecated import, not needed for GoogleMap widget
 
-import 'package:flutter/foundation.dart' show kIsWeb, Factory; // Ensure Factory is imported
+import 'package:flutter/foundation.dart'
+    show kIsWeb, Factory; // Ensure Factory is imported
 import 'package:flutter/gestures.dart'; // For EagerGestureRecognizer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -364,11 +365,19 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                                             (context, error, stackTrace) {
                                           // Try to load as asset if network fails, or vice-versa (basic fallback)
                                           // This is a simple fallback, a more robust solution might be needed
-                                          final isAsset = images[index].startsWith('assets/');
+                                          final isAsset = images[index]
+                                              .startsWith('assets/');
                                           return Image(
-                                            image: isAsset ? NetworkImage(images[index].replaceFirst('assets/', '')) : AssetImage('assets/' + images[index]) as ImageProvider,
+                                            image: isAsset
+                                                ? NetworkImage(images[index]
+                                                    .replaceFirst(
+                                                        'assets/', ''))
+                                                : AssetImage('assets/' +
+                                                        images[index])
+                                                    as ImageProvider,
                                             fit: BoxFit.contain,
-                                            errorBuilder: (ctx, err, st) => const Center(
+                                            errorBuilder: (ctx, err, st) =>
+                                                const Center(
                                               child: Icon(
                                                 Icons.broken_image,
                                                 size: 64,
@@ -429,7 +438,8 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0x1A000000), // Replaced Colors.black.withOpacity(0.1)
+                                            color: const Color(
+                                                0x1A000000), // Replaced Colors.black.withOpacity(0.1)
                                             spreadRadius: 0,
                                             blurRadius: 3,
                                             offset: const Offset(0, 1),
@@ -675,8 +685,9 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
           child: Text(
               'Google Maps API Key not configured. Map cannot be displayed.'));
     }
-    
-    LatLng targetLocation = const LatLng(37.7749, -122.4194); // Default (e.g., San Francisco)
+
+    LatLng targetLocation =
+        const LatLng(37.7749, -122.4194); // Default (e.g., San Francisco)
 
     final parts = locationQuery.split(',');
     if (parts.length == 2) {
@@ -700,7 +711,10 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
         Marker(
           markerId: const MarkerId('listingLocation'),
           position: targetLocation,
-          infoWindow: InfoWindow(title: locationQuery.split(',').first), // Show part of the location query
+          infoWindow: InfoWindow(
+              title: locationQuery
+                  .split(',')
+                  .first), // Show part of the location query
         ),
       },
       onMapCreated: (GoogleMapController controller) {
