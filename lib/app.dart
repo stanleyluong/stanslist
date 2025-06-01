@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import ConsumerWidget and WidgetRef
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+
+// Remove import 'package:provider/provider.dart'; // Removed provider import
 
 import 'providers/auth_provider.dart';
 import 'screens/all_categories_screen.dart'; // Import the new screen
@@ -13,25 +15,30 @@ import 'screens/listings_screen.dart';
 import 'screens/my_listings_screen.dart';
 import 'utils/theme.dart';
 
-class StansListApp extends StatelessWidget {
+class StansListApp extends ConsumerWidget {
+  // Change to ConsumerWidget
   const StansListApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Add WidgetRef ref
+    // Watch the AuthProvider for changes using Riverpod
+    final authState = ref.watch(authProvider); // Use ref.watch
 
     return MaterialApp.router(
-      title: 'Stan\'s List',
+      title: 'Stan\'s List', // Corrected string escaping
       theme: AppTheme.lightTheme,
-      routerConfig: _createRouter(authProvider),
+      routerConfig:
+          _createRouter(authState, ref), // Pass authState (the Notifier itself)
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-GoRouter _createRouter(AuthProvider authProvider) {
+// Update _createRouter to accept AuthProvider directly (it's a ChangeNotifier)
+GoRouter _createRouter(AuthProvider authNotifier, WidgetRef ref) {
   return GoRouter(
-    refreshListenable: authProvider,
+    refreshListenable: authNotifier, // AuthProvider is a ChangeNotifier
     routes: [
       GoRoute(
         path: '/',
@@ -84,7 +91,8 @@ GoRouter _createRouter(AuthProvider authProvider) {
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
-      final bool loggedIn = authProvider.currentUser != null;
+      // Access user from the authNotifier passed to the router
+      final bool loggedIn = authNotifier.user != null;
       final String currentLocation = state.uri.toString();
 
       // Define protected routes that require authentication

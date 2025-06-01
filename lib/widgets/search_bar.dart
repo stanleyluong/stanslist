@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../providers/listings_provider.dart';
 
-class StansListSearchBar extends StatefulWidget {
+class StansListSearchBar extends ConsumerStatefulWidget {
   const StansListSearchBar({super.key});
 
   @override
-  State<StansListSearchBar> createState() => _StansListSearchBarState();
+  ConsumerState<StansListSearchBar> createState() => _StansListSearchBarState();
 }
 
-class _StansListSearchBarState extends State<StansListSearchBar> {
+class _StansListSearchBarState extends ConsumerState<StansListSearchBar> {
   final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final provider = context.read<ListingsProvider>();
-    _searchController.text = provider.searchQuery;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final provider = ref.read(listingsProvider);
+        _searchController.text = provider.searchQuery;
+      }
+    });
   }
 
   @override
@@ -38,7 +43,7 @@ class _StansListSearchBarState extends State<StansListSearchBar> {
               ? IconButton(
                   onPressed: () {
                     _searchController.clear();
-                    context.read<ListingsProvider>().setSearchQuery('');
+                    ref.read(listingsProvider).setSearchQuery('');
                   },
                   icon: const Icon(Icons.clear),
                 )
@@ -49,13 +54,15 @@ class _StansListSearchBarState extends State<StansListSearchBar> {
             borderRadius: BorderRadius.circular(25),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
         onChanged: (value) {
-          context.read<ListingsProvider>().setSearchQuery(value);
+          ref.read(listingsProvider).setSearchQuery(value);
+          setState(() {});
         },
         onSubmitted: (value) {
-          context.read<ListingsProvider>().setSearchQuery(value);
+          ref.read(listingsProvider).setSearchQuery(value);
         },
       ),
     );

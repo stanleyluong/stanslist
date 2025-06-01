@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import ConsumerWidget and WidgetRef
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+
+// import 'package:provider/provider.dart'; // Remove provider import
 
 import '../models/category.dart';
-import '../providers/listings_provider.dart';
-import 'search_bar.dart';
+import 'search_bar.dart'; // Assuming StansListSearchBar will handle its own provider needs
 
-class SidePanel extends StatelessWidget {
+class SidePanel extends ConsumerWidget {
+  // Change to ConsumerWidget
   const SidePanel({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Add WidgetRef ref
+    // final listingsProviderInstance = ref.watch(listingsProvider); // Watch if needed, or read if only for actions
+    // For StansListSearchBar, if it needs to interact with ListingsProvider, it should also be a ConsumerWidget.
+    // Assuming StansListSearchBar is or will be converted to a ConsumerWidget and will use `ref` internally.
+
     return Container(
       width: 280, // Adjust width as needed
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -33,13 +40,7 @@ class SidePanel extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           // Search bar widget for marketplace
-          Consumer<ListingsProvider>(
-            builder: (context, listingsProvider, _) {
-              return Container(
-                child: const StansListSearchBar(),
-              );
-            },
-          ),
+          const StansListSearchBar(), // Assuming StansListSearchBar is a ConsumerWidget or uses ref
           const SizedBox(height: 20),
           _buildExpansionTile(
             context: context,

@@ -1,7 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/listing.dart';
+
+final listingsProvider = ChangeNotifierProvider<ListingsProvider>((ref) {
+  return ListingsProvider();
+});
 
 class ListingsProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

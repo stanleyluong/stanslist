@@ -1,93 +1,133 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stanslist/providers/auth_provider.dart';
 
-import '../providers/auth_provider.dart';
-
-class AuthScreen extends StatefulWidget {
-  static const routeName = '/auth';
-
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Unified handler for Google Sign-In, called by both web and mobile buttons.
-  Future<void> _handleGoogleSignIn() async {
+  Future<void> _handleSignIn(Future<void> Function() signInMethod) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     try {
-      // AuthProvider.signInWithGoogle() will call _googleSignIn.signIn()
-      // The onCurrentUserChanged listener in AuthProvider handles the rest.
-      await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle();
-      // If sign-in is successful, AuthProvider will notify listeners,
-      // and UI should react accordingly (e.g., navigate away).
-      // We might not need to set _isLoading = false here if navigation occurs.
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Failed to sign in with Google: ${e.toString()}';
-        });
-      }
+      await signInMethod();
+      // Navigation or further actions will be handled by the AuthProvider listener
+    } catch (error) {
+      setState(() {
+        _errorMessage = error.toString();
+      });
+      // _showErrorDialog(_errorMessage!); // Keep or remove based on whether you want a dialog for errors here
+    }
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  Widget _buildGoogleSignInButton(BuildContext context) {
-    // Common button for both platforms now
-    return OutlinedButton.icon(
-      icon: Image.asset('assets/google-icon-2048x2048-czn3g8x8.png', height: 24.0),
-      label: const Text('Sign in with Google'),
-      onPressed: _isLoading ? null : _handleGoogleSignIn, // Unified handler
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: Colors.grey.shade400),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-      ),
-    );
-  }
+  // void _showErrorDialog(String message) { // Removed as it's not currently used, can be re-added if dialogs are preferred over inline messages
+  //   showDialog(
+  //     context: context,
+  //     builder: (ctx) => AlertDialog(
+  //       title: const Text('An Error Occurred'),
+  //       content: Text(message),
+  //       actions: <Widget>[
+  //         TextButton(
+  //           child: const Text('Okay'),
+  //           onPressed: () {
+  //             Navigator.of(ctx).pop();
+  //           },
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider); // Correctly watch the provider
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login / Register'),
+        title: const Text('Sign In'),
       ),
       body: Center(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(
-                'Welcome to Stan\'s List',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 24),
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                _buildGoogleSignInButton(context), // Use the unified button
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 16),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    _errorMessage!,
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              if (authState.user == null) ...[
+                // Use authState.user
+                if (_isLoading) const CircularProgressIndicator(),
+                if (!_isLoading) ...[
+                  OutlinedButton.icon(
+                    icon: Image.asset( // Changed from SvgPicture.asset
+                      'assets/google-icon-2048x2048-czn3g8x8.png', // Updated path
+                      height: 24.0, // Adjust size as needed
+                    ),
+                    label: const Text('Sign in with Google'),
+                    onPressed: () => _handleSignIn(ref
+                        .read(authProvider)
+                        .signInWithGoogle), // Use ref.read(authProvider) to call method
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      textStyle: const TextStyle(fontSize: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Placeholder for Apple Sign In button
+                  // OutlinedButton.icon(
+                  //   icon: Icon(Icons.apple, color: Colors.black), // Example Apple icon
+                  //   label: const Text('Sign in with Apple'),
+                  //   onPressed: () {
+                  //     // TODO: Implement Apple Sign In
+                  //     print('Apple Sign In clicked');
+                  //   },
+                  //   style: OutlinedButton.styleFrom(
+                  //     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  //     textStyle: const TextStyle(fontSize: 16, color: Colors.black),
+                  //     side: BorderSide(color: Colors.grey.shade400),
+                  //     shape: RoundedRectangleBorder(
+                  //       borderRadius: BorderRadius.circular(8),
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ] else ...[
                 Text(
-                  _errorMessage!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  textAlign: TextAlign.center,
+                    'You are signed in as ${authState.user!.displayName ?? authState.user!.email}!'), // Display user info
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  child: const Text('Sign Out'),
+                  onPressed: () async {
+                    await ref
+                        .read(authProvider)
+                        .signOut(); // Use ref.read(authProvider) to call method
+                  },
                 ),
               ],
             ],

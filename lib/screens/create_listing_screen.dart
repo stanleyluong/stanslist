@@ -68,7 +68,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final currentUser = authProvider.currentUser;
+    final currentUser = authProvider.user;
     if (widget.listingId == null && // Only auto-populate for new listings
         currentUser?.email != null &&
         _controllers['email']!.text.isEmpty) {
@@ -300,8 +300,10 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       return;
     }
 
-    final currentUser =
-        Provider.of<AuthProvider>(context, listen: false).currentUser;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // final currentUser = authProvider.currentUser;
+    final currentUser = authProvider.user;
+
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
