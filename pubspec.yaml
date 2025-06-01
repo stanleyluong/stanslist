@@ -39,4 +39,3 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
-    - .env # Ensure this file exists at the root of your project
