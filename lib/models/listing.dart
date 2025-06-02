@@ -99,31 +99,59 @@ class Listing {
       };
 
   // Extract a Listing object from a Map object (for JSON deserialization)
-  factory Listing.fromJson(Map<String, dynamic> json) => Listing(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        description: json['description'] as String,
-        price: (json['price'] as num).toDouble(),
-        category: json['category'] as String,
-        userId: json['userId'] as String,
-        datePosted: DateTime.parse(json['datePosted'] as String),
-        createdAt: json['createdAt'] != null
-            ? DateTime.parse(json['createdAt'] as String)
-            : DateTime.parse(
-                json['datePosted'] as String), // fallback for old data
-        // imageUrl is now derived by constructor, so we pass the images list
-        images: json['images'] != null
-            ? List<String>.from(json['images'])
-            // Fallback for old data: if 'images' is null but 'imageUrl' exists, use it in a list
-            : (json['imageUrl'] != null ? [json['imageUrl'] as String] : []),
-        location: json['location'] as String,
-        isActive:
-            json['isActive'] as bool? ?? true, // default to true for old data
-        contactEmail:
-            json['contactEmail'] as String? ?? 'placeholder@example.com',
-        contactPhone: json['contactPhone'] as String?,
-        categoryFields: json['categoryFields'] != null
-            ? Map<String, dynamic>.from(json['categoryFields'])
-            : {},
-      );
+  factory Listing.fromJson(Map<String, dynamic> json) {
+    // Helper function to parse DateTime from various formats
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is String) return DateTime.parse(value);
+      // Handle Firestore Timestamp - check if it has toDate method
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return DateTime.now();
+    }
+
+    // Handle datePosted - use createdAt as fallback if datePosted is null
+    DateTime datePosted;
+    if (json['datePosted'] != null) {
+      datePosted = parseDateTime(json['datePosted']);
+    } else if (json['createdAt'] != null) {
+      datePosted = parseDateTime(json['createdAt']);
+    } else {
+      datePosted = DateTime.now();
+    }
+
+    // Handle createdAt
+    DateTime createdAt;
+    if (json['createdAt'] != null) {
+      createdAt = parseDateTime(json['createdAt']);
+    } else {
+      createdAt = datePosted; // Use datePosted as fallback
+    }
+
+    return Listing(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      price: (json['price'] as num).toDouble(),
+      category: json['category'] as String,
+      userId: json['userId'] as String,
+      datePosted: datePosted,
+      createdAt: createdAt,
+      // imageUrl is now derived by constructor, so we pass the images list
+      images: json['images'] != null
+          ? List<String>.from(json['images'])
+          // Fallback for old data: if 'images' is null but 'imageUrl' exists, use it in a list
+          : (json['imageUrl'] != null ? [json['imageUrl'] as String] : []),
+      location: json['location'] as String,
+      isActive:
+          json['isActive'] as bool? ?? true, // default to true for old data
+      contactEmail:
+          json['contactEmail'] as String? ?? 'placeholder@example.com',
+      contactPhone: json['contactPhone'] as String?,
+      categoryFields: json['categoryFields'] != null
+          ? Map<String, dynamic>.from(json['categoryFields'])
+          : {},
+    );
+  }
 }

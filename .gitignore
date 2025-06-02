@@ -43,3 +43,7 @@ coverage/
 .env
 run_web.sh
 run_dev.sh
+node_modules
+
+# Firebase credentials
+serviceAccountKey.json

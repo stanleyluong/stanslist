@@ -1,0 +1,12 @@
+{
+  "name": "stanslist-seeder",
+  "version": "1.0.0",
+  "description": "Data seeder for StansList marketplace",
+  "scripts": {
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.0.2",
+    "firebase-admin": "^11.9.0"
+  }
+}
