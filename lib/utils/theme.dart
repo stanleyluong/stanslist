@@ -61,7 +61,7 @@ class AppTheme {
 
     // Apply card theme - always use CardThemeData since copyWith expects it
     return baseTheme.copyWith(
-      cardTheme: const CardThemeData(
+      cardTheme: const CardTheme(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
